@@ -10,6 +10,10 @@ type PromoLightboxProps = {
   className?: string;
 };
 
+function isRemoteImage(src: string) {
+  return src.startsWith("http://") || src.startsWith("https://");
+}
+
 export function PromoLightbox({
   src,
   alt,
@@ -17,6 +21,7 @@ export function PromoLightbox({
   className = "",
 }: PromoLightboxProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const remoteImage = isRemoteImage(src);
 
   useEffect(() => {
     if (!isOpen) {
@@ -41,14 +46,19 @@ export function PromoLightbox({
         className={`block w-full cursor-zoom-in overflow-hidden rounded-lg text-left outline-none transition duration-200 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#f4d28b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#080604] ${className}`}
         aria-label="Open larger show promo"
       >
-        <Image
-          src={src}
-          alt={alt}
-          width={1200}
-          height={628}
-          priority={priority}
-          className="h-auto w-full object-contain"
-        />
+        {remoteImage ? (
+          // Remote CMS images are intentionally rendered without next/image config.
+          <img src={src} alt={alt} className="h-auto w-full object-contain" />
+        ) : (
+          <Image
+            src={src}
+            alt={alt}
+            width={1200}
+            height={628}
+            priority={priority}
+            className="h-auto w-full object-contain"
+          />
+        )}
       </button>
 
       {isOpen ? (
@@ -72,13 +82,21 @@ export function PromoLightbox({
               &times;
             </button>
             <div className="overflow-hidden rounded-lg border border-[#d7a84f]/35 bg-black shadow-[0_30px_100px_rgba(0,0,0,0.65)]">
-              <Image
-                src={src}
-                alt={alt}
-                width={1600}
-                height={837}
-                className="h-auto max-h-[84vh] w-full object-contain"
-              />
+              {remoteImage ? (
+                <img
+                  src={src}
+                  alt={alt}
+                  className="h-auto max-h-[84vh] w-full object-contain"
+                />
+              ) : (
+                <Image
+                  src={src}
+                  alt={alt}
+                  width={1600}
+                  height={837}
+                  className="h-auto max-h-[84vh] w-full object-contain"
+                />
+              )}
             </div>
           </div>
         </div>

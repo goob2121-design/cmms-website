@@ -1,18 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Ticker } from "@/components/Ticker";
-import { getNextShow, shows } from "./show-dates/showData";
+import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
+import { shows } from "./show-dates/showData";
 
 const generalTicketUrl = "https://www.pinnaclestudiotn.com/cmms";
+
+export const dynamic = "force-dynamic";
 
 type ScheduleItem = {
   label: string;
   date: Date;
+  title?: string;
+  time?: string;
+  venue?: string;
+  advanceTicketPrice?: string;
+  doorTicketPrice?: string;
   ticketUrl?: string;
   detailsUrl?: string;
+  promoImageUrl?: string;
+  isFeatured?: boolean;
 };
 
-const schedule: ScheduleItem[] = [
+const fallbackSchedule: ScheduleItem[] = [
   { label: "February 7, 2026", date: new Date("2026-02-07T00:00:00") },
   { label: "April 18, 2026", date: new Date("2026-04-18T00:00:00") },
   ...shows.map((show) => ({
@@ -23,16 +33,62 @@ const schedule: ScheduleItem[] = [
   })),
 ];
 
-function getNextScheduleDate() {
+function formatShowDate(dateValue: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${dateValue}T00:00:00Z`));
+}
+
+function formatShowTime(show: DbShow) {
+  const parts = [];
+
+  if (show.doors_time) {
+    parts.push(`Doors ${show.doors_time}`);
+  }
+
+  if (show.show_time) {
+    parts.push(`Show ${show.show_time}`);
+  }
+
+  return parts.join(" / ");
+}
+
+function fromDatabaseShow(show: DbShow): ScheduleItem {
+  return {
+    label: formatShowDate(show.show_date),
+    date: new Date(`${show.show_date}T00:00:00`),
+    title: show.title,
+    time: formatShowTime(show),
+    venue: show.venue ?? undefined,
+    advanceTicketPrice: show.advance_ticket_price ?? undefined,
+    doorTicketPrice: show.door_ticket_price ?? undefined,
+    ticketUrl: show.ticket_url ?? undefined,
+    detailsUrl: show.slug ? `/show-dates/${show.slug}` : undefined,
+    promoImageUrl: show.promo_image_url ?? undefined,
+    isFeatured: Boolean(show.is_featured),
+  };
+}
+
+function getNextScheduleDate(schedule: ScheduleItem[]) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   return schedule.find((show) => show.date >= today);
 }
 
-export default function Home() {
-  const nextShow = getNextShow();
-  const nextScheduleDate = getNextScheduleDate();
+export default async function Home() {
+  const databaseShows = await getPublishedShows();
+  const schedule =
+    databaseShows.length > 0
+      ? [...databaseShows]
+          .sort((a, b) => a.show_date.localeCompare(b.show_date))
+          .map(fromDatabaseShow)
+      : fallbackSchedule;
+  const nextScheduleDate = getNextScheduleDate(schedule);
+  const nextTicketUrl = nextScheduleDate?.ticketUrl ?? generalTicketUrl;
 
   return (
     <main className="relative z-10">
@@ -67,7 +123,7 @@ export default function Home() {
               </p>
               <div className="mt-6 flex flex-col gap-4 sm:flex-row">
                 <a
-                  href={nextShow?.ticketUrl ?? generalTicketUrl}
+                  href={nextTicketUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
@@ -80,9 +136,9 @@ export default function Home() {
                 >
                   See Upcoming Shows
                 </a>
-                {nextShow?.detailsUrl ? (
+                {nextScheduleDate?.detailsUrl ? (
                   <a
-                    href={nextShow.detailsUrl}
+                    href={nextScheduleDate.detailsUrl}
                     className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#f4d28b]/40 bg-black/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#fff7ea] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f4d28b] hover:text-[#f4d28b]"
                   >
                     Show Details
@@ -139,10 +195,14 @@ export default function Home() {
             <ul className="mt-5 grid gap-3">
               {schedule.map((show) => {
                 const isNextShow = nextScheduleDate?.label === show.label;
+                const priceLine =
+                  show.advanceTicketPrice && show.doorTicketPrice
+                    ? `${show.advanceTicketPrice} advance / ${show.doorTicketPrice} at door`
+                    : null;
 
                 return (
                   <li
-                    key={show.label}
+                    key={`${show.label}-${show.title ?? "cmms"}`}
                     className={`flex flex-col gap-2 rounded-md border px-4 py-3 transition sm:flex-row sm:items-center sm:justify-between ${
                       isNextShow
                         ? "border-[#d7a84f]/60 bg-[#d7a84f]/12 text-white"
@@ -175,15 +235,23 @@ export default function Home() {
                         </a>
                       ) : null}
                     </div>
+                    {(show.title || show.time || show.venue || priceLine) && (
+                      <div className="text-sm leading-6 text-[#d9c8aa] sm:hidden">
+                        {show.title ? <p>{show.title}</p> : null}
+                        {show.time ? <p>{show.time}</p> : null}
+                        {show.venue ? <p>{show.venue}</p> : null}
+                        {priceLine ? <p>{priceLine}</p> : null}
+                      </div>
+                    )}
                   </li>
                 );
               })}
             </ul>
 
             <a
-              href={nextShow?.ticketUrl ?? "/show-dates"}
-              target={nextShow?.ticketUrl ? "_blank" : undefined}
-              rel={nextShow?.ticketUrl ? "noopener noreferrer" : undefined}
+              href={nextScheduleDate?.ticketUrl ?? "/show-dates"}
+              target={nextScheduleDate?.ticketUrl ? "_blank" : undefined}
+              rel={nextScheduleDate?.ticketUrl ? "noopener noreferrer" : undefined}
               className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
             >
               Buy Tickets
