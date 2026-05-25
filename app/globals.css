@@ -24,3 +24,39 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+html {
+  scroll-padding-top: 120px;
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-dark-navbar {
+    animation: nav-darken linear both;
+    animation-range: 0 120px;
+    animation-timeline: scroll();
+  }
+}
+
+@keyframes nav-darken {
+  from {
+    background-color: rgba(8, 6, 4, 0.24);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+  }
+
+  to {
+    background-color: rgba(8, 6, 4, 0.92);
+    border-color: rgba(215, 168, 79, 0.2);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
+  }
+}
