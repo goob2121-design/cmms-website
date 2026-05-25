@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { PromoLightbox } from "@/components/PromoLightbox";
 import { getNextShow, shows, venue } from "./showData";
 
 export const metadata: Metadata = {
@@ -51,12 +51,9 @@ export default function ShowDatesPage() {
           {featuredEvent.promoImage ? (
             <div className="px-6 pt-6 sm:px-8 sm:pt-8">
               <div className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-[#d7a84f]/20 bg-black/30 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-                <Image
+                <PromoLightbox
                   src={featuredEvent.promoImage}
                   alt={`${featuredEvent.title} promo`}
-                  width={1200}
-                  height={628}
-                  className="h-auto w-full object-contain"
                   priority
                 />
               </div>

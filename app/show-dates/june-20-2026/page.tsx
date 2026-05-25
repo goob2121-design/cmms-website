@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { PromoLightbox } from "@/components/PromoLightbox";
 import { shows, venue } from "../showData";
 
 const juneShow = shows[0];
@@ -17,26 +17,23 @@ export const metadata: Metadata = {
 export default function JuneShowPage() {
   return (
     <main className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-14 pt-40 sm:px-8 lg:pb-20">
-      <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+      <section className="mx-auto max-w-4xl text-center">
         <div className="overflow-hidden rounded-lg border border-[#d7a84f]/25 bg-black/25 shadow-[0_24px_80px_rgba(0,0,0,0.34)]">
-          <Image
+          <PromoLightbox
             src="/june-20-promo.png"
             alt="June 20 Cumberland Mountain Music Show promo"
-            width={1200}
-            height={628}
             priority
-            className="h-auto w-full object-contain"
           />
         </div>
 
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">
-            Show Details
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
-            June 20, 2026 Cumberland Mountain Music Show
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-[#e7d8c2]">
+        <p className="mt-8 text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">
+          Show Details
+        </p>
+        <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-semibold leading-tight text-white sm:text-5xl">
+          June 20th Cumberland Mountain Music Show
+        </h1>
+        <div className="mx-auto mt-6 max-w-3xl">
+          <p className="text-lg leading-8 text-[#e7d8c2]">
             Join us Saturday, June 20th for another exciting night of live music
             at The Cumberland Mountain Music Show at the Cumberland Gap
             Convention Center! Featuring Bryan Turner and the Cumberland
@@ -75,7 +72,7 @@ export default function JuneShowPage() {
               rel="noopener noreferrer"
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
             >
-              Advance Tickets
+              Advanced Tickets
             </a>
             <Link
               href="/show-dates"

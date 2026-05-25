@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Ticker } from "@/components/Ticker";
 import { getNextShow, shows } from "./show-dates/showData";
 
@@ -154,6 +155,14 @@ export default function Home() {
                         <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">
                           Next Show
                         </span>
+                      ) : null}
+                      {show.detailsUrl ? (
+                        <Link
+                          href={show.detailsUrl}
+                          className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
+                        >
+                          View Details
+                        </Link>
                       ) : null}
                       {show.ticketUrl ? (
                         <a
