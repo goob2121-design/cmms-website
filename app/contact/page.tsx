@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { getSitePage } from "@/lib/supabase/cms";
 
@@ -13,7 +14,6 @@ export const metadata: Metadata = createPublicPageMetadata({
 const fallbackBody =
   "For show information, sponsorship conversations, or general questions about The Cumberland Mountain Music Show, reach out by email or join the mailing list for updates.";
 const fallbackEmail = "cumberlandmountainmusic@gmail.com";
-const fallbackMailingListUrl = "https://pinnaclestudiotn.com/cmms-mailing-list";
 const fallbackVenueName = "Cumberland Gap Convention Center";
 const fallbackVenueAddress = "601 Colwyn Avenue, Cumberland Gap, TN 37724";
 
@@ -25,8 +25,6 @@ export default async function ContactPage() {
   const body = page?.body?.trim() || fallbackBody;
   const imageUrl = page?.image_url?.trim();
   const email = page?.email?.trim() || fallbackEmail;
-  const mailingListUrl =
-    page?.mailing_list_url?.trim() || fallbackMailingListUrl;
   const venueName = page?.venue_name?.trim() || fallbackVenueName;
   const venueAddress = page?.venue_address?.trim() || fallbackVenueAddress;
 
@@ -52,14 +50,12 @@ export default async function ContactPage() {
             >
               Email Us
             </a>
-            <a
-              href={mailingListUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/mailing-list"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/65 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
             >
               Join the Mailing List
-            </a>
+            </Link>
           </div>
           {imageUrl ? (
             <div className="mt-8 overflow-hidden rounded-lg border border-[#d7a84f]/20 bg-black/25">

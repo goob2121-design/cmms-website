@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { createPublicPageMetadata } from "@/lib/metadata";
+import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { shows, venue } from "./showData";
 
@@ -31,6 +32,7 @@ type DisplayShow = {
   shortDescription?: string;
   featuredText?: string;
   isFeatured?: boolean;
+  source: "database" | "fallback";
 };
 
 function formatDate(dateValue: string) {
@@ -107,6 +109,7 @@ function fromDatabaseShow(show: DbShow): DisplayShow {
     shortDescription: show.short_description ?? undefined,
     featuredText: show.featured_text ?? undefined,
     isFeatured: Boolean(show.is_featured),
+    source: "database",
   };
 }
 
@@ -124,6 +127,7 @@ function fromFallbackShow(show: (typeof shows)[number]): DisplayShow {
     ticketUrl: show.ticketUrl,
     detailsUrl: show.detailsUrl,
     promoImage: show.promoImage,
+    source: "fallback",
   };
 }
 
@@ -139,6 +143,10 @@ export default async function ShowDatesPage() {
     (event) => new Date(event.dateValue) >= today,
   );
   const featuredEvent = futureEvents[0];
+  const featuredSponsors =
+    featuredEvent?.source === "database"
+      ? await getActiveSponsorsForShow(featuredEvent.key)
+      : [];
   const upcomingEvents = featuredEvent
     ? futureEvents.filter(
         (event) =>
@@ -241,6 +249,44 @@ export default async function ShowDatesPage() {
               </p>
             </aside>
           </div>
+
+          {featuredSponsors.length > 0 ? (
+            <section className="border-t border-[#d7a84f]/18 px-6 py-3 sm:px-8">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+                {featuredSponsors.map((sponsor) => {
+                  const sponsorContent = (
+                    <div className="flex h-14 min-w-24 max-w-36 items-center justify-center rounded-md border border-[#d7a84f]/12 bg-black/18 px-3 transition hover:border-[#d7a84f]/38 sm:h-16 sm:min-w-28 sm:max-w-40">
+                      {sponsor.logo_url ? (
+                        <img
+                          src={sponsor.logo_url}
+                          alt={`${sponsor.name} logo`}
+                          className="max-h-9 w-auto max-w-full object-contain sm:max-h-12"
+                        />
+                      ) : (
+                        <p className="line-clamp-2 text-center text-xs font-semibold leading-4 text-[#f8efe2]">
+                          {sponsor.name}
+                        </p>
+                      )}
+                    </div>
+                  );
+
+                  return sponsor.website_url ? (
+                    <a
+                      key={sponsor.id}
+                      href={sponsor.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={sponsor.name}
+                    >
+                      {sponsorContent}
+                    </a>
+                  ) : (
+                    <div key={sponsor.id}>{sponsorContent}</div>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
         </section>
       ) : null}
 

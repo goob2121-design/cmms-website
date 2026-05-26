@@ -85,6 +85,20 @@ export default async function RootLayout({
               Cumberland Mountain Music, Cumberland Gap, Tennessee. Home of The
               Cumberland Mountain Music Show.
             </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              <Link
+                href="/mailing-list"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
+              >
+                Mailing List
+              </Link>
+              <Link
+                href="/contact"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
+              >
+                Contact
+              </Link>
+            </div>
             <Link
               href="/admin"
               className="mt-4 inline-flex text-[11px] uppercase tracking-[0.18em] text-[#7d705f] transition hover:text-[#bda987]"
