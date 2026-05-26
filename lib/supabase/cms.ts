@@ -39,6 +39,22 @@ export type MediaItem = {
   updated_at: string | null;
 };
 
+export type TickerMessage = {
+  id: string;
+  message: string;
+  active: boolean | null;
+  display_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type SiteSetting = {
+  id: string;
+  setting_key: string;
+  setting_value: string | null;
+  updated_at: string | null;
+};
+
 export async function getSitePage(pageKey: "about" | "contact") {
   if (!supabase) {
     return null;
@@ -58,6 +74,45 @@ export async function getSitePage(pageKey: "about" | "contact") {
   }
 
   return data as SitePage | null;
+}
+
+export async function getActiveTickerMessages() {
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("ticker_messages")
+    .select("*")
+    .eq("active", true)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.warn("Unable to load ticker messages:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as TickerMessage[];
+}
+
+export async function getSiteSetting(settingKey: string) {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("*")
+    .eq("setting_key", settingKey)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`Unable to load site setting "${settingKey}":`, error.message);
+    return null;
+  }
+
+  return data as SiteSetting | null;
 }
 
 export async function getPublishedNewsPosts() {

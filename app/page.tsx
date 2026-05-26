@@ -3,6 +3,7 @@ import Link from "next/link";
 import { HeroFogVideo } from "@/components/HeroFogVideo";
 import { Ticker } from "@/components/Ticker";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
+import { getActiveTickerMessages, getSiteSetting } from "@/lib/supabase/cms";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { shows } from "./show-dates/showData";
 
@@ -82,7 +83,11 @@ function getNextScheduleDate(schedule: ScheduleItem[]) {
 }
 
 export default async function Home() {
-  const databaseShows = await getPublishedShows();
+  const [databaseShows, tickerMessages, tickerSpeedSetting] = await Promise.all([
+    getPublishedShows(),
+    getActiveTickerMessages(),
+    getSiteSetting("homepage_ticker_speed"),
+  ]);
   const schedule =
     databaseShows.length > 0
       ? [...databaseShows]
@@ -104,7 +109,10 @@ export default async function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,6,4,0.74),rgba(8,6,4,0.3)_48%,rgba(8,6,4,0.08)),linear-gradient(180deg,rgba(8,6,4,0.28),rgba(8,6,4,0.08)_34%,rgba(8,6,4,0.78)_68%,rgba(8,6,4,1)),radial-gradient(circle_at_50%_28%,rgba(215,168,79,0.12),transparent_42%)]" />
 
         <div className="relative flex min-h-[78svh] flex-col pt-[124px] sm:pt-[104px]">
-          <Ticker />
+          <Ticker
+            messages={tickerMessages.map((ticker) => ticker.message)}
+            speedSeconds={Number(tickerSpeedSetting?.setting_value ?? 30)}
+          />
 
           <div className="mx-auto flex w-full max-w-7xl flex-1 items-end justify-center px-5 pb-8 pt-8 sm:px-8 lg:pb-10">
             <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">

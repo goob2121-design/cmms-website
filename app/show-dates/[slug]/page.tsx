@@ -21,6 +21,33 @@ function formatDate(dateValue: string) {
   }).format(new Date(`${dateValue}T00:00:00Z`));
 }
 
+function formatSponsorShowDate(dateValue: string) {
+  const date = new Date(`${dateValue}T00:00:00Z`);
+  const day = date.getUTCDate();
+  const suffix =
+    day % 100 >= 11 && day % 100 <= 13
+      ? "th"
+      : day % 10 === 1
+        ? "st"
+        : day % 10 === 2
+          ? "nd"
+          : day % 10 === 3
+            ? "rd"
+            : "th";
+  const month = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+
+  return `${month} ${day}${suffix}`;
+}
+
+function getSponsorShowTitle(showTitle: string) {
+  return showTitle.toLowerCase().includes("christmas")
+    ? "Cumberland Mountain Music Christmas Show"
+    : "Cumberland Mountain Music Show";
+}
+
 function formatPriceLine(
   advanceTicketPrice?: string | null,
   doorTicketPrice?: string | null,
@@ -207,8 +234,12 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
       {sponsors.length > 0 ? (
         <section className="mt-7 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
           <h2 className="text-center text-2xl font-semibold text-white sm:text-3xl">
-            Thank You To Our Sponsors
+            Proud Sponsors of the {formatSponsorShowDate(show.show_date)}{" "}
+            {getSponsorShowTitle(show.title)}
           </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-6 text-[#d9c8aa] sm:text-base">
+            Please support the businesses that help make live music possible.
+          </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {sponsors.map((sponsor) => {
               const sponsorContent = (

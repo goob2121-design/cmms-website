@@ -36,6 +36,11 @@ const adminAreas = [
     href: "/admin/media",
     description: "Manage public photos and video links.",
   },
+  {
+    name: "Ticker Messages",
+    href: "/admin/ticker",
+    description: "Manage homepage ticker announcements and ordering.",
+  },
 ];
 
 export default function AdminDashboardPage() {

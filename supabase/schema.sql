@@ -133,6 +133,22 @@ create table if not exists public.media_items (
   updated_at timestamptz default now()
 );
 
+create table if not exists public.ticker_messages (
+  id uuid primary key default gen_random_uuid(),
+  message text not null,
+  active boolean default true,
+  display_order int default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.site_settings (
+  id uuid primary key default gen_random_uuid(),
+  setting_key text unique not null,
+  setting_value text,
+  updated_at timestamptz default now()
+);
+
 create table if not exists public.people_profiles (
   id uuid primary key default gen_random_uuid(),
   profile_type text not null check (profile_type in ('band', 'team')),
@@ -229,6 +245,8 @@ alter table public.show_sponsors enable row level security;
 alter table public.site_pages enable row level security;
 alter table public.news_posts enable row level security;
 alter table public.media_items enable row level security;
+alter table public.ticker_messages enable row level security;
+alter table public.site_settings enable row level security;
 alter table public.people_profiles enable row level security;
 alter table public.people_profile_submissions enable row level security;
 
@@ -430,6 +448,34 @@ to authenticated
 using (true)
 with check (true);
 
+drop policy if exists "Public visitors can read active ticker messages" on public.ticker_messages;
+create policy "Public visitors can read active ticker messages"
+on public.ticker_messages
+for select
+using (active = true);
+
+drop policy if exists "Authenticated users can manage ticker messages" on public.ticker_messages;
+create policy "Authenticated users can manage ticker messages"
+on public.ticker_messages
+for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Public visitors can read site settings" on public.site_settings;
+create policy "Public visitors can read site settings"
+on public.site_settings
+for select
+using (true);
+
+drop policy if exists "Authenticated users can manage site settings" on public.site_settings;
+create policy "Authenticated users can manage site settings"
+on public.site_settings
+for all
+to authenticated
+using (true)
+with check (true);
+
 drop policy if exists "Public visitors can read published people profiles" on public.people_profiles;
 create policy "Public visitors can read published people profiles"
 on public.people_profiles
@@ -578,11 +624,46 @@ before update on public.media_items
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_ticker_messages_updated_at on public.ticker_messages;
+create trigger set_ticker_messages_updated_at
+before update on public.ticker_messages
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists set_site_settings_updated_at on public.site_settings;
+create trigger set_site_settings_updated_at
+before update on public.site_settings
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists set_people_profiles_updated_at on public.people_profiles;
 create trigger set_people_profiles_updated_at
 before update on public.people_profiles
 for each row
 execute function public.set_updated_at();
+
+insert into public.ticker_messages (message, display_order, active)
+select seed.message, seed.display_order, true
+from (
+  values
+    ('★ June 20th • Cumberland Gap Convention Center • Doors Open 6PM • Show Starts 7PM', 10),
+    ('◆ Featuring Bryan Turner & The Cumberland Mountain Music Show Band', 20),
+    ('★ Special Guest Kelly Caldwell • More Guests To Be Announced', 30),
+    ('◆ Advance Tickets $8 Online • $10 At The Door', 40),
+    ('★ Bluegrass • Gospel • Country • Traditional Mountain Music', 50),
+    ('◆ Family Friendly Entertainment For All Ages', 60),
+    ('★ The #1 Live Music Show in the Tri-State Area', 70),
+    ('◆ Visit CumberlandMountainMusic.com For Tickets & Show Info', 80)
+) as seed(message, display_order)
+where not exists (
+  select 1
+  from public.ticker_messages existing
+  where existing.message = seed.message
+);
+
+insert into public.site_settings (setting_key, setting_value)
+values ('homepage_ticker_speed', '30')
+on conflict (setting_key) do nothing;
 
 insert into public.site_pages (page_key, title, body, image_url)
 values
