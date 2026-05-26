@@ -60,3 +60,10 @@ html {
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
   }
 }
+
+.profile-card-bio {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}

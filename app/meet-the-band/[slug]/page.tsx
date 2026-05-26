@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PeopleSubmissionForm } from "@/components/PeopleSubmissionForm";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import {
   getPeopleProfileForReview,
   getPublishedPeopleProfileBySlug,
@@ -46,24 +47,11 @@ function ProfileImage({ member }: { member: PeopleProfile }) {
   return (
     <div className="overflow-hidden rounded-lg border border-[#d7a84f]/25 bg-[linear-gradient(135deg,rgba(215,168,79,0.18),rgba(0,0,0,0.34))] shadow-[0_24px_80px_rgba(0,0,0,0.34)]">
       <div className="aspect-[4/5]">
-        {member.photo_url ? (
-          <img
-            src={member.photo_url}
-            alt={member.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center px-6 text-center">
-            <div>
-              <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-[#d7a84f]/35 bg-black/30 text-4xl font-semibold text-[#f4d28b]">
-                {member.name.charAt(0)}
-              </div>
-              <p className="mt-5 text-sm font-semibold uppercase tracking-[0.22em] text-[#d7a84f]">
-                Cumberland Mountain Music
-              </p>
-            </div>
-          </div>
-        )}
+        <ProfilePhoto
+          src={member.photo_url}
+          alt={member.name}
+          className="h-full w-full object-cover"
+        />
       </div>
     </div>
   );
@@ -106,9 +94,11 @@ export default async function BandMemberPage({
           <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
             {member.name}
           </h1>
-          {member.instruments ? (
+          {(member.role_title || member.instruments) ? (
             <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-[#f4d28b]">
-              {member.instruments}
+              {[member.role_title, member.instruments]
+                .filter(Boolean)
+                .join(" - ")}
             </p>
           ) : null}
           {member.bio ? (
@@ -120,6 +110,14 @@ export default async function BandMemberPage({
               More details will be added soon.
             </p>
           )}
+          {member.hobbies_interests ? (
+            <div className="mt-6 rounded-lg border border-[#d7a84f]/20 bg-black/20 p-4 text-[#e7d8c2]">
+              <p className="font-semibold text-[#f4d28b]">
+                Hobbies &amp; Interests:
+              </p>
+              <p className="mt-2 leading-7">{member.hobbies_interests}</p>
+            </div>
+          ) : null}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             {member.facebook_url ? (

@@ -37,6 +37,8 @@ export function PeopleSubmissionForm({
       submitted_instruments:
         String(formData.get("submitted_instruments") ?? "").trim() || null,
       submitted_bio: String(formData.get("submitted_bio") ?? "").trim() || null,
+      submitted_hobbies_interests:
+        String(formData.get("submitted_hobbies_interests") ?? "").trim() || null,
       submitted_facebook_url:
         String(formData.get("submitted_facebook_url") ?? "").trim() || null,
       submitted_website_url:
@@ -58,7 +60,7 @@ export function PeopleSubmissionForm({
 
   return (
     <section className="mt-10 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
-      <h2 className="text-2xl font-semibold text-white">Suggest Changes</h2>
+      <h2 className="text-2xl font-semibold text-white">Request Bio Update</h2>
       <p className="mt-3 leading-7 text-[#d9c8aa]">
         Share edits you would like the CMMS team to review. These suggestions do
         not update the public profile until an admin applies them.
@@ -101,6 +103,10 @@ export function PeopleSubmissionForm({
         <label className="block">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Bio</span>
           <textarea name="submitted_bio" defaultValue={profile.bio ?? ""} rows={6} className="mt-2 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 py-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Hobbies &amp; Interests</span>
+          <textarea name="submitted_hobbies_interests" defaultValue={profile.hobbies_interests ?? ""} rows={3} placeholder="Racing, music, family time, cooking, community events, etc." className="mt-2 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 py-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
         </label>
         <label className="block">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Photo Note</span>

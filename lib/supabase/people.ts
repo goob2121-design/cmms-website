@@ -10,6 +10,7 @@ export type PeopleProfile = {
   role_title: string | null;
   instruments: string | null;
   bio: string | null;
+  hobbies_interests: string | null;
   photo_url: string | null;
   facebook_url: string | null;
   website_url: string | null;
@@ -30,6 +31,7 @@ export type PeopleProfileSubmission = {
   submitted_role_title: string | null;
   submitted_instruments: string | null;
   submitted_bio: string | null;
+  submitted_hobbies_interests: string | null;
   submitted_facebook_url: string | null;
   submitted_website_url: string | null;
   submitted_photo_note: string | null;

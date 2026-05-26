@@ -140,6 +140,7 @@ create table if not exists public.people_profiles (
   role_title text,
   instruments text,
   bio text,
+  hobbies_interests text,
   photo_url text,
   facebook_url text,
   website_url text,
@@ -152,6 +153,8 @@ create table if not exists public.people_profiles (
   updated_at timestamptz default now()
 );
 
+alter table public.people_profiles add column if not exists hobbies_interests text;
+
 create table if not exists public.people_profile_submissions (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid references public.people_profiles(id) on delete cascade,
@@ -160,12 +163,16 @@ create table if not exists public.people_profile_submissions (
   submitted_role_title text,
   submitted_instruments text,
   submitted_bio text,
+  submitted_hobbies_interests text,
   submitted_facebook_url text,
   submitted_website_url text,
   submitted_photo_note text,
   submitted_at timestamptz default now(),
   status text default 'pending' check (status in ('pending', 'reviewed', 'applied', 'rejected'))
 );
+
+alter table public.people_profile_submissions
+add column if not exists submitted_hobbies_interests text;
 
 do $$
 begin
@@ -457,6 +464,7 @@ returns table (
   role_title text,
   instruments text,
   bio text,
+  hobbies_interests text,
   photo_url text,
   facebook_url text,
   website_url text,
@@ -480,6 +488,7 @@ as $$
     pp.role_title,
     pp.instruments,
     pp.bio,
+    pp.hobbies_interests,
     pp.photo_url,
     pp.facebook_url,
     pp.website_url,

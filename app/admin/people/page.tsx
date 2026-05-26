@@ -4,6 +4,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { createStorageFileName, validateImageFile } from "@/lib/imageUploads";
 import { sanitizeSlugInput, slugify, slugPattern } from "@/lib/slug";
 import { supabase } from "@/lib/supabase/client";
@@ -21,6 +22,7 @@ type PeopleForm = {
   role_title: string;
   instruments: string;
   bio: string;
+  hobbies_interests: string;
   photo_url: string;
   facebook_url: string;
   website_url: string;
@@ -45,6 +47,7 @@ const emptyForm: PeopleForm = {
   role_title: "",
   instruments: "",
   bio: "",
+  hobbies_interests: "",
   photo_url: "",
   facebook_url: "",
   website_url: "",
@@ -68,6 +71,7 @@ function toForm(profile: PeopleProfile): PeopleForm {
     role_title: profile.role_title ?? "",
     instruments: profile.instruments ?? "",
     bio: profile.bio ?? "",
+    hobbies_interests: profile.hobbies_interests ?? "",
     photo_url: profile.photo_url ?? "",
     facebook_url: profile.facebook_url ?? "",
     website_url: profile.website_url ?? "",
@@ -86,6 +90,7 @@ function toPayload(form: PeopleForm) {
     role_title: cleanValue(form.role_title),
     instruments: cleanValue(form.instruments),
     bio: cleanValue(form.bio),
+    hobbies_interests: cleanValue(form.hobbies_interests),
     photo_url: cleanValue(form.photo_url),
     facebook_url: cleanValue(form.facebook_url),
     website_url: cleanValue(form.website_url),
@@ -352,6 +357,7 @@ export default function AdminPeoplePage() {
         role_title: submission.submitted_role_title?.trim() || null,
         instruments: submission.submitted_instruments?.trim() || null,
         bio: submission.submitted_bio?.trim() || null,
+        hobbies_interests: submission.submitted_hobbies_interests?.trim() || null,
         facebook_url: submission.submitted_facebook_url?.trim() || null,
         website_url: submission.submitted_website_url?.trim() || null,
         reviewed_at: new Date().toISOString(),
@@ -363,6 +369,19 @@ export default function AdminPeoplePage() {
     }
     await updateSubmissionStatus(submission, "applied");
     await loadProfiles();
+  }
+
+  async function deleteSubmission(submission: PeopleProfileSubmission) {
+    if (!supabase || !window.confirm("Delete this submitted update?")) return;
+    const { error } = await supabase
+      .from("people_profile_submissions")
+      .delete()
+      .eq("id", submission.id);
+    if (error) setErrorMessage(error.message);
+    else {
+      setMessage("Submission deleted.");
+      await loadSubmissions();
+    }
   }
 
   if (isCheckingSession) {
@@ -427,10 +446,17 @@ export default function AdminPeoplePage() {
               <label key={field} className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">{field.replace("_", " ")}</span><input name={field} type={field.includes("url") ? "url" : field === "display_order" ? "number" : "text"} value={String(form[field as keyof PeopleForm] ?? "")} onChange={handleTextChange} required={field === "name"} pattern={field === "slug" ? "[a-z0-9-]+" : undefined} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" /></label>
             ))}
           </div>
+          <label className="mt-5 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Hobbies &amp; Interests</span><input name="hobbies_interests" value={form.hobbies_interests} onChange={handleTextChange} placeholder="Racing, music, family time, cooking, community events, etc." className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" /></label>
           <section className="mt-5 rounded-lg border border-[#d7a84f]/18 bg-black/20 p-4">
             <h3 className="text-xl font-semibold text-white">Photo Upload</h3>
             <p className="mt-2 text-sm leading-6 text-[#d9c8aa]">Upload an image or paste a photo URL.</p>
-            {form.photo_url ? <img src={form.photo_url} alt="Profile preview" className="mt-4 aspect-[4/3] w-full rounded-md border border-[#d7a84f]/15 object-cover" /> : null}
+            <div className="mt-4 aspect-[4/3] overflow-hidden rounded-md border border-[#d7a84f]/15">
+              <ProfilePhoto
+                src={form.photo_url}
+                alt="Profile preview"
+                className="h-full w-full object-cover"
+              />
+            </div>
             <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePhotoUpload} disabled={isUploadingPhoto} className="mt-4 block w-full text-sm text-[#d9c8aa] file:mr-4 file:rounded-full file:border-0 file:bg-[#d7a84f] file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-[0.14em] file:text-[#120d07]" />
           </section>
           <label className="mt-5 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Bio</span><textarea name="bio" value={form.bio} onChange={handleTextChange} rows={6} className="mt-2 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 py-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" /></label>
@@ -441,14 +467,14 @@ export default function AdminPeoplePage() {
       </section>
 
       <section className="mt-8 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
-        <h2 className="text-2xl font-semibold text-white">Profile Submissions</h2>
+        <h2 className="text-2xl font-semibold text-white">Pending Bio Updates</h2>
         <div className="mt-5 grid gap-4">
           {submissions.length === 0 ? <p className="text-[#d9c8aa]">No submissions yet.</p> : null}
           {submissions.map((submission) => (
             <article key={submission.id} className="rounded-md border border-[#d7a84f]/15 bg-black/25 p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div><h3 className="font-semibold text-white">{submission.people_profiles?.name ?? "Profile"}</h3><p className="mt-1 text-sm uppercase tracking-[0.14em] text-[#f4d28b]">{submission.status} / {submission.people_profiles?.profile_type ?? "person"}</p><div className="mt-4 space-y-2 text-sm leading-6 text-[#d9c8aa]">{submission.submitted_name ? <p>Name: {submission.submitted_name}</p> : null}{submission.submitted_role_title ? <p>Role: {submission.submitted_role_title}</p> : null}{submission.submitted_instruments ? <p>Instruments: {submission.submitted_instruments}</p> : null}{submission.submitted_facebook_url ? <p>Facebook: {submission.submitted_facebook_url}</p> : null}{submission.submitted_website_url ? <p>Website: {submission.submitted_website_url}</p> : null}{submission.submitted_bio ? <p className="whitespace-pre-line">Bio: {submission.submitted_bio}</p> : null}{submission.submitted_photo_note ? <p className="whitespace-pre-line">Photo note: {submission.submitted_photo_note}</p> : null}</div></div>
-                <div className="flex flex-wrap gap-2"><button type="button" onClick={() => applySubmission(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply</button><button type="button" onClick={() => updateSubmissionStatus(submission, "reviewed")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Reviewed</button><button type="button" onClick={() => updateSubmissionStatus(submission, "rejected")} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Reject</button></div>
+                <div><h3 className="font-semibold text-white">{submission.people_profiles?.name ?? "Profile"}</h3><p className="mt-1 text-sm uppercase tracking-[0.14em] text-[#f4d28b]">{submission.status} / {submission.people_profiles?.profile_type ?? "person"}</p><div className="mt-4 space-y-2 text-sm leading-6 text-[#d9c8aa]">{submission.submitted_name ? <p>Name: {submission.submitted_name}</p> : null}{submission.submitted_role_title ? <p>Role: {submission.submitted_role_title}</p> : null}{submission.submitted_instruments ? <p>Instruments: {submission.submitted_instruments}</p> : null}{submission.submitted_facebook_url ? <p>Facebook: {submission.submitted_facebook_url}</p> : null}{submission.submitted_website_url ? <p>Website: {submission.submitted_website_url}</p> : null}{submission.submitted_bio ? <p className="whitespace-pre-line">Bio: {submission.submitted_bio}</p> : null}{submission.submitted_hobbies_interests ? <p className="whitespace-pre-line">Hobbies &amp; Interests: {submission.submitted_hobbies_interests}</p> : null}{submission.submitted_photo_note ? <p className="whitespace-pre-line">Photo note: {submission.submitted_photo_note}</p> : null}</div></div>
+                <div className="flex flex-wrap gap-2"><button type="button" onClick={() => applySubmission(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply</button><button type="button" onClick={() => updateSubmissionStatus(submission, "reviewed")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Reviewed</button><button type="button" onClick={() => updateSubmissionStatus(submission, "rejected")} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Reject</button><button type="button" onClick={() => deleteSubmission(submission)} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Delete</button></div>
               </div>
             </article>
           ))}
