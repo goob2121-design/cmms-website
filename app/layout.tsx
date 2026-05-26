@@ -41,9 +41,9 @@ export const metadata: Metadata = {
     images: [defaultSocialImage],
   },
   icons: {
-    icon: "/cmms-round-logo.png",
-    shortcut: "/cmms-round-logo.png",
-    apple: "/cmms-round-logo.png",
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
