@@ -8,7 +8,8 @@ values
   ('sponsor-logos', 'sponsor-logos', true),
   ('show-promos', 'show-promos', true),
   ('media-images', 'media-images', true),
-  ('people-photos', 'people-photos', true)
+  ('people-photos', 'people-photos', true),
+  ('people-submissions', 'people-submissions', true)
 on conflict (id) do update set
   public = excluded.public;
 
@@ -167,12 +168,16 @@ create table if not exists public.people_profile_submissions (
   submitted_facebook_url text,
   submitted_website_url text,
   submitted_photo_note text,
+  submitted_photo_url text,
   submitted_at timestamptz default now(),
   status text default 'pending' check (status in ('pending', 'reviewed', 'applied', 'rejected'))
 );
 
 alter table public.people_profile_submissions
 add column if not exists submitted_hobbies_interests text;
+
+alter table public.people_profile_submissions
+add column if not exists submitted_photo_url text;
 
 do $$
 begin
@@ -254,6 +259,29 @@ on storage.objects
 for delete
 to authenticated
 using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
+
+drop policy if exists "Public visitors can read people submission photos" on storage.objects;
+create policy "Public visitors can read people submission photos"
+on storage.objects
+for select
+using (bucket_id = 'people-submissions');
+
+drop policy if exists "Review visitors can upload people submission photos" on storage.objects;
+create policy "Review visitors can upload people submission photos"
+on storage.objects
+for insert
+with check (
+  bucket_id = 'people-submissions'
+  and name ~* '\.(jpe?g|png|webp)$'
+);
+
+drop policy if exists "Authenticated users can manage people submission photos" on storage.objects;
+create policy "Authenticated users can manage people submission photos"
+on storage.objects
+for all
+to authenticated
+using (bucket_id = 'people-submissions')
+with check (bucket_id = 'people-submissions');
 
 drop policy if exists "Public visitors can read published shows" on public.shows;
 create policy "Public visitors can read published shows"

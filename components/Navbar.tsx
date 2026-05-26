@@ -43,6 +43,11 @@ export function Navbar({
     { label: "Contact", href: "/contact", Icon: Mail },
     ...(showNews ? [{ label: "News", href: "/news", Icon: Newspaper }] : []),
     ...(showMedia ? [{ label: "Media", href: "/media", Icon: Images }] : []),
+    {
+      label: "Facebook",
+      href: "https://facebook.com/cumberlandmountainmusic",
+      Icon: Link2,
+    },
   ];
 
   useEffect(() => {
@@ -66,10 +71,10 @@ export function Navbar({
           : "border-white/10 bg-[#080604]/24 backdrop-blur-sm"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:gap-5 xl:gap-7">
         <Link
           href="/"
-          className="flex items-center justify-center gap-3 lg:justify-start"
+          className="flex shrink-0 items-center justify-center gap-2.5 lg:justify-start"
         >
           <Image
             src="/cmms-round-logo.png"
@@ -86,13 +91,13 @@ export function Navbar({
         </Link>
 
         <nav
-          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm font-semibold text-[#f7ead7] sm:gap-x-6"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm font-semibold text-[#f7ead7] lg:min-w-0 lg:flex-1 lg:flex-nowrap lg:gap-x-3 xl:gap-x-4"
           aria-label="Primary navigation"
         >
           {navItems.map(({ href, label, Icon }) => {
             const isExternal = href.startsWith("http");
             const className =
-              "group inline-flex items-center gap-1.5 transition hover:text-[#f4d28b]";
+              "group inline-flex items-center gap-1 whitespace-nowrap transition hover:text-[#f4d28b] xl:gap-1.5";
             const content = (
               <>
                 <Icon
@@ -120,31 +125,19 @@ export function Navbar({
               </Link>
             );
           })}
-          <Link
-            href="/show-dates"
-            className="group inline-flex items-center gap-1.5 rounded-full bg-[#d7a84f] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-          >
-            <Ticket
-              aria-hidden="true"
-              className="h-4 w-4 transition duration-200 group-hover:-rotate-6"
-              strokeWidth={2}
-            />
-            <span>Tickets</span>
-          </Link>
-          <a
-            href="https://facebook.com/cumberlandmountainmusic"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-1.5 transition hover:text-[#f4d28b]"
-          >
-            <Link2
-              aria-hidden="true"
-              className="h-4 w-4 text-[#d7a84f]/78 transition duration-200 group-hover:-translate-y-0.5 group-hover:text-[#f4d28b]"
-              strokeWidth={1.8}
-            />
-            <span>Facebook</span>
-          </a>
         </nav>
+
+        <Link
+          href="/show-dates"
+          className="group inline-flex shrink-0 items-center justify-center gap-1.5 self-center whitespace-nowrap rounded-full bg-[#d7a84f] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e] lg:ml-auto lg:self-auto"
+        >
+          <Ticket
+            aria-hidden="true"
+            className="h-4 w-4 transition duration-200 group-hover:-rotate-6"
+            strokeWidth={2}
+          />
+          <span>Tickets</span>
+        </Link>
       </div>
     </header>
   );

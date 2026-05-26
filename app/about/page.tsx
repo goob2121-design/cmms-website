@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { getSitePage } from "@/lib/supabase/cms";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicPageMetadata({
   title: "About | Cumberland Mountain Music",
   description:
     "Learn about The Cumberland Mountain Music Show in Cumberland Gap, Tennessee, founded and hosted by Bryan Turner.",
-  alternates: {
-    canonical: "/about",
-  },
-};
+  path: "/about",
+  image: "/cmms-people-saying.png",
+});
 
 const fallbackBody = `The Cumberland Mountain Music Show grew out of a desire to create a family-friendly stage show that celebrates the musical heritage of the Cumberland Gap region. Founded and hosted by Bryan Turner, the show brings together bluegrass, gospel, country, and traditional mountain music in a format that feels welcoming, local, and rooted in the stories of the people who live here.
 

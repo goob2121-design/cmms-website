@@ -1,48 +1,48 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import {
+  defaultDescription,
+  defaultSocialImage,
+  defaultTitle,
+  siteName,
+  siteUrl,
+} from "@/lib/metadata";
 import { hasPublishedMedia, hasPublishedNews } from "@/lib/supabase/cms";
 import { hasPublishedPeopleProfiles } from "@/lib/supabase/people";
 import "./globals.css";
 
-const siteUrl = "https://cumberlandmountainmusic.com";
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Cumberland Mountain Music | Home of The Cumberland Mountain Music Show",
-  description:
-    "Live bluegrass, gospel, and traditional mountain music from Cumberland Gap, Tennessee. Home of The Cumberland Mountain Music Show.",
+  title: defaultTitle,
+  description: defaultDescription,
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title:
-      "Cumberland Mountain Music | Home of The Cumberland Mountain Music Show",
-    description:
-      "Live bluegrass, gospel, and traditional mountain music from Cumberland Gap, Tennessee. Home of The Cumberland Mountain Music Show.",
+    title: defaultTitle,
+    description: defaultDescription,
     url: siteUrl,
-    siteName: "Cumberland Mountain Music",
+    siteName,
     images: [
       {
-        url: "/cmms-logo.png",
+        url: defaultSocialImage,
         width: 1200,
         height: 630,
-        alt: "Cumberland Mountain Music",
+        alt: siteName,
       },
     ],
-    locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title:
-      "Cumberland Mountain Music | Home of The Cumberland Mountain Music Show",
-    description:
-      "Live bluegrass, gospel, and traditional mountain music from Cumberland Gap, Tennessee. Home of The Cumberland Mountain Music Show.",
-    images: ["/cmms-logo.png"],
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [defaultSocialImage],
   },
   icons: {
     icon: "/cmms-round-logo.png",
+    shortcut: "/cmms-round-logo.png",
     apple: "/cmms-round-logo.png",
   },
 };

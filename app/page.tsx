@@ -106,41 +106,37 @@ export default async function Home() {
         <div className="relative flex min-h-[78svh] flex-col pt-[124px] sm:pt-[104px]">
           <Ticker />
 
-          <div className="mx-auto flex w-full max-w-7xl flex-1 items-end px-5 pb-8 pt-8 sm:px-8 lg:pb-10">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#f4d28b]">
-                Home of
+          <div className="mx-auto flex w-full max-w-7xl flex-1 items-end justify-center px-5 pb-8 pt-8 sm:px-8 lg:pb-10">
+            <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
+              <Image
+                src="/cmms-logo.png"
+                alt="Cumberland Mountain Music Show"
+                width={760}
+                height={360}
+                priority
+                className="h-auto w-[min(88vw,620px)] object-contain drop-shadow-[0_18px_42px_rgba(0,0,0,0.72)] sm:w-[min(76vw,680px)]"
+              />
+              <p className="mt-5 text-balance text-xl font-semibold leading-8 text-[#fff7ea] drop-shadow-[0_8px_24px_rgba(0,0,0,0.58)] sm:text-2xl">
+                The #1 Live Music Show in the Tri-State Area
               </p>
-              <h1 className="mt-3 text-balance text-5xl font-semibold leading-[1.02] text-white drop-shadow-[0_8px_28px_rgba(0,0,0,0.55)] sm:text-6xl lg:text-7xl">
-                The Cumberland Mountain Music Show
-              </h1>
-              <p className="mt-4 max-w-2xl text-pretty text-lg leading-8 text-[#f8ead6] sm:text-xl">
-                Live bluegrass, gospel, and traditional mountain music from the
-                heart of Appalachia.
+              <p className="mt-2 text-balance text-sm font-semibold uppercase tracking-[0.18em] text-[#f4d28b] drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)] sm:text-base sm:tracking-[0.22em]">
+                Bluegrass • Gospel • Country • Traditional Mountain Music
               </p>
-              <div className="mt-6 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-7 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
                 <a
                   href={nextTicketUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
                 >
-                  Get Tickets
+                  Buy Tickets
                 </a>
-                <a
-                  href="/show-dates"
+                <Link
+                  href={nextScheduleDate?.detailsUrl ?? "/show-dates"}
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#f4d28b]/65 bg-black/20 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#fff7ea] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f4d28b] hover:text-[#f4d28b]"
                 >
-                  See Upcoming Shows
-                </a>
-                {nextScheduleDate?.detailsUrl ? (
-                  <a
-                    href={nextScheduleDate.detailsUrl}
-                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#f4d28b]/40 bg-black/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#fff7ea] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f4d28b] hover:text-[#f4d28b]"
-                  >
-                  Show Details
-                </a>
-              ) : null}
+                  View Show Details
+                </Link>
               </div>
               <TicketCheckoutNote />
             </div>

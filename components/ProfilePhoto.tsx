@@ -26,7 +26,7 @@ export function ProfilePhoto({ src, alt, className = "" }: ProfilePhotoProps) {
   return (
     <div
       aria-label={`${alt} photo coming soon`}
-      className={`relative overflow-hidden bg-[linear-gradient(135deg,rgba(215,168,79,0.18),rgba(18,13,8,0.92)_52%,rgba(0,0,0,0.72))] ${className}`}
+      className={`photo-placeholder relative overflow-hidden bg-[linear-gradient(135deg,rgba(215,168,79,0.18),rgba(18,13,8,0.92)_52%,rgba(0,0,0,0.72))] ${className}`}
     >
       <div className="absolute inset-0 flex items-center justify-center px-5 text-center">
         <div>

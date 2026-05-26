@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { getPublishedMediaItems } from "@/lib/supabase/cms";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicPageMetadata({
   title: "Media | Cumberland Mountain Music",
   description:
     "Photos and videos from The Cumberland Mountain Music Show in Cumberland Gap, Tennessee.",
-  alternates: {
-    canonical: "/media",
-  },
-};
+  path: "/media",
+});
 
 export const dynamic = "force-dynamic";
 

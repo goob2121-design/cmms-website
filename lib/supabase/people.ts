@@ -35,6 +35,7 @@ export type PeopleProfileSubmission = {
   submitted_facebook_url: string | null;
   submitted_website_url: string | null;
   submitted_photo_note: string | null;
+  submitted_photo_url: string | null;
   submitted_at: string | null;
   status: "pending" | "reviewed" | "applied" | "rejected" | null;
 };

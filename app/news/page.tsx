@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { getPublishedNewsPosts } from "@/lib/supabase/cms";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicPageMetadata({
   title: "News | Cumberland Mountain Music",
   description:
     "Latest Cumberland Mountain Music news, announcements, and show updates from Cumberland Gap, Tennessee.",
-  alternates: {
-    canonical: "/news",
-  },
-};
+  path: "/news",
+});
 
 export const dynamic = "force-dynamic";
 

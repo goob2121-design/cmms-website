@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { getSitePage } from "@/lib/supabase/cms";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicPageMetadata({
   title: "Contact | Cumberland Mountain Music",
   description:
     "Contact Cumberland Mountain Music, email the show team, and join the mailing list for updates from Cumberland Gap, Tennessee.",
-  alternates: {
-    canonical: "/contact",
-  },
-};
+  path: "/contact",
+});
 
 const fallbackBody =
   "For show information, sponsorship conversations, or general questions about The Cumberland Mountain Music Show, reach out by email or join the mailing list for updates.";

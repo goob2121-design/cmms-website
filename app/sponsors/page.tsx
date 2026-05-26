@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { getSponsorLevelRank, SponsorLevelBadge } from "@/lib/sponsorLevels";
 import { getActiveSponsors } from "@/lib/supabase/sponsors";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicPageMetadata({
   title: "Sponsors | Cumberland Mountain Music",
   description:
     "Sponsor information for Cumberland Mountain Music and The Cumberland Mountain Music Show in Cumberland Gap, Tennessee.",
-  alternates: {
-    canonical: "/sponsors",
-  },
-};
+  path: "/sponsors",
+});
 
 export const dynamic = "force-dynamic";
 

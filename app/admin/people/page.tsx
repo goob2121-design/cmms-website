@@ -371,6 +371,25 @@ export default function AdminPeoplePage() {
     await loadProfiles();
   }
 
+  async function applySubmittedPhoto(submission: PeopleProfileSubmission) {
+    if (!supabase || !submission.submitted_photo_url) return;
+    const { error } = await supabase
+      .from("people_profiles")
+      .update({
+        photo_url: submission.submitted_photo_url,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", submission.profile_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setMessage("Submitted photo applied to the profile.");
+    await loadProfiles();
+  }
+
   async function deleteSubmission(submission: PeopleProfileSubmission) {
     if (!supabase || !window.confirm("Delete this submitted update?")) return;
     const { error } = await supabase
@@ -473,8 +492,8 @@ export default function AdminPeoplePage() {
           {submissions.map((submission) => (
             <article key={submission.id} className="rounded-md border border-[#d7a84f]/15 bg-black/25 p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div><h3 className="font-semibold text-white">{submission.people_profiles?.name ?? "Profile"}</h3><p className="mt-1 text-sm uppercase tracking-[0.14em] text-[#f4d28b]">{submission.status} / {submission.people_profiles?.profile_type ?? "person"}</p><div className="mt-4 space-y-2 text-sm leading-6 text-[#d9c8aa]">{submission.submitted_name ? <p>Name: {submission.submitted_name}</p> : null}{submission.submitted_role_title ? <p>Role: {submission.submitted_role_title}</p> : null}{submission.submitted_instruments ? <p>Instruments: {submission.submitted_instruments}</p> : null}{submission.submitted_facebook_url ? <p>Facebook: {submission.submitted_facebook_url}</p> : null}{submission.submitted_website_url ? <p>Website: {submission.submitted_website_url}</p> : null}{submission.submitted_bio ? <p className="whitespace-pre-line">Bio: {submission.submitted_bio}</p> : null}{submission.submitted_hobbies_interests ? <p className="whitespace-pre-line">Hobbies &amp; Interests: {submission.submitted_hobbies_interests}</p> : null}{submission.submitted_photo_note ? <p className="whitespace-pre-line">Photo note: {submission.submitted_photo_note}</p> : null}</div></div>
-                <div className="flex flex-wrap gap-2"><button type="button" onClick={() => applySubmission(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply</button><button type="button" onClick={() => updateSubmissionStatus(submission, "reviewed")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Reviewed</button><button type="button" onClick={() => updateSubmissionStatus(submission, "rejected")} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Reject</button><button type="button" onClick={() => deleteSubmission(submission)} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Delete</button></div>
+                <div><h3 className="font-semibold text-white">{submission.people_profiles?.name ?? "Profile"}</h3><p className="mt-1 text-sm uppercase tracking-[0.14em] text-[#f4d28b]">{submission.status} / {submission.people_profiles?.profile_type ?? "person"}</p>{submission.submitted_photo_url ? <div className="mt-4 h-48 max-w-xs overflow-hidden rounded-md border border-[#d7a84f]/20"><ProfilePhoto src={submission.submitted_photo_url} alt={`${submission.people_profiles?.name ?? "Profile"} submitted photo`} className="h-full w-full object-cover" /></div> : null}<div className="mt-4 space-y-2 text-sm leading-6 text-[#d9c8aa]">{submission.submitted_name ? <p>Name: {submission.submitted_name}</p> : null}{submission.submitted_role_title ? <p>Role: {submission.submitted_role_title}</p> : null}{submission.submitted_instruments ? <p>Instruments: {submission.submitted_instruments}</p> : null}{submission.submitted_facebook_url ? <p>Facebook: {submission.submitted_facebook_url}</p> : null}{submission.submitted_website_url ? <p>Website: {submission.submitted_website_url}</p> : null}{submission.submitted_bio ? <p className="whitespace-pre-line">Bio: {submission.submitted_bio}</p> : null}{submission.submitted_hobbies_interests ? <p className="whitespace-pre-line">Hobbies &amp; Interests: {submission.submitted_hobbies_interests}</p> : null}{submission.submitted_photo_note ? <p className="whitespace-pre-line">Photo note: {submission.submitted_photo_note}</p> : null}</div></div>
+                <div className="flex flex-wrap gap-2"><button type="button" onClick={() => applySubmission(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply</button>{submission.submitted_photo_url ? <button type="button" onClick={() => applySubmittedPhoto(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply Submitted Photo</button> : null}<button type="button" onClick={() => updateSubmissionStatus(submission, "reviewed")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Reviewed</button><button type="button" onClick={() => updateSubmissionStatus(submission, "rejected")} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Reject</button><button type="button" onClick={() => deleteSubmission(submission)} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Delete</button></div>
               </div>
             </article>
           ))}

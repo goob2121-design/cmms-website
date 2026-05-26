@@ -2,17 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
+import { createPublicPageMetadata } from "@/lib/metadata";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { shows, venue } from "./showData";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPublicPageMetadata({
   title: "Show Dates | Cumberland Mountain Music",
   description:
     "2026 Cumberland Mountain Music Show dates, tickets, venue details, and showtime information in Cumberland Gap, Tennessee.",
-  alternates: {
-    canonical: "/show-dates",
-  },
-};
+  path: "/show-dates",
+});
 
 export const dynamic = "force-dynamic";
 
