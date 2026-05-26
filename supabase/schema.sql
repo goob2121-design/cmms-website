@@ -93,6 +93,7 @@ create table if not exists public.site_pages (
   id uuid primary key default gen_random_uuid(),
   page_key text unique not null,
   title text,
+  subtitle text,
   body text,
   image_url text,
   email text,
@@ -102,6 +103,7 @@ create table if not exists public.site_pages (
   updated_at timestamptz default now()
 );
 
+alter table public.site_pages add column if not exists subtitle text;
 alter table public.site_pages add column if not exists email text;
 alter table public.site_pages add column if not exists mailing_list_url text;
 alter table public.site_pages add column if not exists venue_name text;
@@ -665,10 +667,23 @@ insert into public.site_settings (setting_key, setting_value)
 values ('homepage_ticker_speed', '30')
 on conflict (setting_key) do nothing;
 
-insert into public.site_pages (page_key, title, body, image_url)
+insert into public.site_settings (setting_key, setting_value)
 values
-  ('about', 'The Cumberland Mountain Music Show', null, null),
-  ('contact', 'Contact Cumberland Mountain Music', null, null)
+  ('show_meet_the_band', 'false'),
+  ('show_meet_the_team', 'false')
+on conflict (setting_key) do nothing;
+
+insert into public.site_pages (page_key, title, subtitle, body, image_url)
+values
+  ('about', 'The Cumberland Mountain Music Show', null, null, null),
+  ('contact', 'Contact Cumberland Mountain Music', null, null, null),
+  (
+    'homepage_about',
+    'About The Show',
+    'Built for families, stories, and real live music.',
+    'The Cumberland Mountain Music Show was created by Bryan Turner as a place to celebrate the music, stories, and people that make this region special. Built around bluegrass, gospel, country, and traditional mountain music, the show brings families together for an evening of live entertainment in the heart of Cumberland Gap.',
+    null
+  )
 on conflict (page_key) do nothing;
 
 -- Optional seed examples. Re-running this block updates matching slugs.

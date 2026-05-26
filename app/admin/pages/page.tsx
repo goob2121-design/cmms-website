@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 
 type PageForm = {
   title: string;
+  subtitle: string;
   body: string;
   image_url: string;
   email: string;
@@ -16,30 +17,53 @@ type PageForm = {
   venue_address: string;
 };
 
-const pageKeys = ["about", "contact"] as const;
+const pageKeys = ["about", "contact", "homepage_about"] as const;
+type PageKey = (typeof pageKeys)[number];
+
+const pageLabels: Record<PageKey, string> = {
+  about: "About Page",
+  contact: "Contact Page",
+  homepage_about: "Homepage About Section",
+};
+
+const defaultPageForms: Record<PageKey, PageForm> = {
+  about: {
+    title: "",
+    subtitle: "",
+    body: "",
+    image_url: "",
+    email: "",
+    mailing_list_url: "",
+    venue_name: "",
+    venue_address: "",
+  },
+  contact: {
+    title: "",
+    subtitle: "",
+    body: "",
+    image_url: "",
+    email: "",
+    mailing_list_url: "",
+    venue_name: "",
+    venue_address: "",
+  },
+  homepage_about: {
+    title: "About The Show",
+    subtitle: "Built for families, stories, and real live music.",
+    body:
+      "The Cumberland Mountain Music Show was created by Bryan Turner as a place to celebrate the music, stories, and people that make this region special. Built around bluegrass, gospel, country, and traditional mountain music, the show brings families together for an evening of live entertainment in the heart of Cumberland Gap.",
+    image_url: "",
+    email: "",
+    mailing_list_url: "",
+    venue_name: "",
+    venue_address: "",
+  },
+};
 
 export default function AdminPagesPage() {
   const router = useRouter();
-  const [forms, setForms] = useState<Record<string, PageForm>>({
-    about: {
-      title: "",
-      body: "",
-      image_url: "",
-      email: "",
-      mailing_list_url: "",
-      venue_name: "",
-      venue_address: "",
-    },
-    contact: {
-      title: "",
-      body: "",
-      image_url: "",
-      email: "",
-      mailing_list_url: "",
-      venue_name: "",
-      venue_address: "",
-    },
-  });
+  const [forms, setForms] =
+    useState<Record<PageKey, PageForm>>(defaultPageForms);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -61,7 +85,7 @@ export default function AdminPagesPage() {
       const { data: pages, error } = await supabase
         .from("site_pages")
         .select(
-          "page_key,title,body,image_url,email,mailing_list_url,venue_name,venue_address",
+          "page_key,title,subtitle,body,image_url,email,mailing_list_url,venue_name,venue_address",
         )
         .in("page_key", [...pageKeys]);
 
@@ -71,8 +95,12 @@ export default function AdminPagesPage() {
         setForms((current) => {
           const next = { ...current };
           (pages ?? []).forEach((page) => {
-            next[page.page_key] = {
+            const pageKey = page.page_key as PageKey;
+            if (!pageKeys.includes(pageKey)) return;
+
+            next[pageKey] = {
               title: page.title ?? "",
+              subtitle: page.subtitle ?? "",
               body: page.body ?? "",
               image_url: page.image_url ?? "",
               email: page.email ?? "",
@@ -92,7 +120,7 @@ export default function AdminPagesPage() {
   }, [router]);
 
   function updateForm(
-    pageKey: string,
+    pageKey: PageKey,
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const { name, value } = event.target;
@@ -105,7 +133,7 @@ export default function AdminPagesPage() {
     }));
   }
 
-  async function savePage(pageKey: string) {
+  async function savePage(pageKey: PageKey) {
     if (!supabase) {
       return;
     }
@@ -117,8 +145,11 @@ export default function AdminPagesPage() {
       {
         page_key: pageKey,
         title: form.title.trim() || null,
+        subtitle:
+          pageKey === "homepage_about" ? form.subtitle.trim() || null : null,
         body: form.body.trim() || null,
-        image_url: form.image_url.trim() || null,
+        image_url:
+          pageKey === "homepage_about" ? null : form.image_url.trim() || null,
         email: pageKey === "contact" ? form.email.trim() || null : null,
         mailing_list_url:
           pageKey === "contact" ? form.mailing_list_url.trim() || null : null,
@@ -135,7 +166,7 @@ export default function AdminPagesPage() {
       return;
     }
 
-    setMessage(`${pageKey === "about" ? "About" : "Contact"} page saved.`);
+    setMessage(`${pageLabels[pageKey]} saved.`);
   }
 
   if (isCheckingSession) {
@@ -174,17 +205,24 @@ export default function AdminPagesPage() {
             key={pageKey}
             className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.24)]"
           >
-            <h2 className="text-2xl font-semibold capitalize text-white">
-              {pageKey}
+            <h2 className="text-2xl font-semibold text-white">
+              {pageLabels[pageKey]}
             </h2>
             <label className="mt-5 block">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Title</span>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">{pageKey === "homepage_about" ? "Section Heading" : "Title"}</span>
               <input name="title" value={forms[pageKey].title} onChange={(event) => updateForm(pageKey, event)} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" />
             </label>
-            <label className="mt-4 block">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Image URL</span>
-              <input name="image_url" value={forms[pageKey].image_url} onChange={(event) => updateForm(pageKey, event)} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" />
-            </label>
+            {pageKey === "homepage_about" ? (
+              <label className="mt-4 block">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Subtitle</span>
+                <input name="subtitle" value={forms[pageKey].subtitle} onChange={(event) => updateForm(pageKey, event)} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" />
+              </label>
+            ) : (
+              <label className="mt-4 block">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Image URL</span>
+                <input name="image_url" value={forms[pageKey].image_url} onChange={(event) => updateForm(pageKey, event)} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" />
+              </label>
+            )}
             <label className="mt-4 block">
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Body</span>
               <textarea name="body" value={forms[pageKey].body} onChange={(event) => updateForm(pageKey, event)} rows={10} className="mt-2 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 py-3 text-white outline-none focus:border-[#f4d28b]" />
@@ -213,7 +251,7 @@ export default function AdminPagesPage() {
               </div>
             ) : null}
             <button type="button" onClick={() => savePage(pageKey)} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#d7a84f] px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:bg-[#f1c86e]">
-              Save {pageKey}
+              Save {pageLabels[pageKey]}
             </button>
           </article>
         ))}

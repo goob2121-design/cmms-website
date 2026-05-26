@@ -8,8 +8,11 @@ import {
   siteName,
   siteUrl,
 } from "@/lib/metadata";
-import { hasPublishedMedia, hasPublishedNews } from "@/lib/supabase/cms";
-import { hasPublishedPeopleProfiles } from "@/lib/supabase/people";
+import {
+  getSiteSetting,
+  hasPublishedMedia,
+  hasPublishedNews,
+} from "@/lib/supabase/cms";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -52,12 +55,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [showNews, showMedia, showBand, showTeam] = await Promise.all([
+  const [showNews, showMedia, showBandSetting, showTeamSetting] =
+    await Promise.all([
     hasPublishedNews(),
     hasPublishedMedia(),
-    hasPublishedPeopleProfiles("band"),
-    hasPublishedPeopleProfiles("team"),
+    getSiteSetting("show_meet_the_band"),
+    getSiteSetting("show_meet_the_team"),
   ]);
+  const showBand = showBandSetting?.setting_value === "true";
+  const showTeam = showTeamSetting?.setting_value === "true";
 
   return (
     <html lang="en" className="h-full antialiased">

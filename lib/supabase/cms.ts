@@ -4,6 +4,7 @@ export type SitePage = {
   id: string;
   page_key: string;
   title: string | null;
+  subtitle: string | null;
   body: string | null;
   image_url: string | null;
   email: string | null;
@@ -55,7 +56,7 @@ export type SiteSetting = {
   updated_at: string | null;
 };
 
-export async function getSitePage(pageKey: "about" | "contact") {
+export async function getSitePage(pageKey: "about" | "contact" | "homepage_about") {
   if (!supabase) {
     return null;
   }
@@ -63,7 +64,7 @@ export async function getSitePage(pageKey: "about" | "contact") {
   const { data, error } = await supabase
     .from("site_pages")
     .select(
-      "id,page_key,title,body,image_url,email,mailing_list_url,venue_name,venue_address,updated_at",
+      "id,page_key,title,subtitle,body,image_url,email,mailing_list_url,venue_name,venue_address,updated_at",
     )
     .eq("page_key", pageKey)
     .maybeSingle();

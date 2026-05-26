@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { PeopleSectionPreview } from "@/components/PeopleSectionPreview";
 import { PersonCard } from "@/components/PersonCard";
 import { createPublicPageMetadata } from "@/lib/metadata";
+import { getSiteSetting } from "@/lib/supabase/cms";
 import { getPublishedPeopleProfiles } from "@/lib/supabase/people";
 
 export const metadata: Metadata = createPublicPageMetadata({
@@ -12,7 +14,53 @@ export const metadata: Metadata = createPublicPageMetadata({
 
 export const dynamic = "force-dynamic";
 
-export default async function MeetTheBandPage() {
+type MeetTheBandPageProps = {
+  searchParams: Promise<{ preview?: string | string[] }>;
+};
+
+function getPreviewValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function MeetTheBandPage({
+  searchParams,
+}: MeetTheBandPageProps) {
+  const query = await searchParams;
+  const isAdminPreview = getPreviewValue(query.preview) === "admin";
+  const showBandSetting = await getSiteSetting("show_meet_the_band");
+  const showBand = showBandSetting?.setting_value === "true";
+
+  if (!showBand) {
+    if (isAdminPreview) {
+      return (
+        <PeopleSectionPreview
+          profileType="band"
+          title="Meet the Band"
+          description="Get to know the musicians who help bring The Cumberland Mountain Music Show to life."
+          emptyMessage="Band member profiles will be added soon."
+          profileBasePath="/meet-the-band"
+          comingSoonMessage="Meet the Band section coming soon."
+        />
+      );
+    }
+
+    return (
+      <main className="relative z-10 mx-auto w-full max-w-4xl px-6 pb-14 pt-40 text-center sm:px-8 lg:pb-20">
+        <section className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">
+            Cumberland Mountain Music
+          </p>
+          <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+            Meet the Band
+          </h1>
+          <p className="mt-5 text-lg leading-8 text-[#e7d8c2]">
+            Meet the Band section coming soon.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   const members = await getPublishedPeopleProfiles("band");
 
   return (

@@ -3,11 +3,21 @@ import Link from "next/link";
 import { HeroFogVideo } from "@/components/HeroFogVideo";
 import { Ticker } from "@/components/Ticker";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
-import { getActiveTickerMessages, getSiteSetting } from "@/lib/supabase/cms";
+import {
+  getActiveTickerMessages,
+  getSitePage,
+  getSiteSetting,
+} from "@/lib/supabase/cms";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { shows } from "./show-dates/showData";
 
 const generalTicketUrl = "https://www.pinnaclestudiotn.com/cmms";
+const fallbackHomepageAbout = {
+  title: "About The Show",
+  subtitle: "Built for families, stories, and real live music.",
+  body:
+    "The Cumberland Mountain Music Show was created by Bryan Turner as a place to celebrate the music, stories, and people that make this region special. Built around bluegrass, gospel, country, and traditional mountain music, the show brings families together for an evening of live entertainment in the heart of Cumberland Gap.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -83,10 +93,16 @@ function getNextScheduleDate(schedule: ScheduleItem[]) {
 }
 
 export default async function Home() {
-  const [databaseShows, tickerMessages, tickerSpeedSetting] = await Promise.all([
+  const [
+    databaseShows,
+    tickerMessages,
+    tickerSpeedSetting,
+    homepageAboutPage,
+  ] = await Promise.all([
     getPublishedShows(),
     getActiveTickerMessages(),
     getSiteSetting("homepage_ticker_speed"),
+    getSitePage("homepage_about"),
   ]);
   const schedule =
     databaseShows.length > 0
@@ -96,6 +112,12 @@ export default async function Home() {
       : fallbackSchedule;
   const nextScheduleDate = getNextScheduleDate(schedule);
   const nextTicketUrl = nextScheduleDate?.ticketUrl ?? generalTicketUrl;
+  const homepageAbout = {
+    title: homepageAboutPage?.title?.trim() || fallbackHomepageAbout.title,
+    subtitle:
+      homepageAboutPage?.subtitle?.trim() || fallbackHomepageAbout.subtitle,
+    body: homepageAboutPage?.body?.trim() || fallbackHomepageAbout.body,
+  };
 
   return (
     <main className="relative z-10">
@@ -156,17 +178,13 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
           <article className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.26)] sm:p-7">
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#d7a84f]">
-              About The Show
+              {homepageAbout.title}
             </p>
             <h2 className="mt-4 text-3xl font-semibold leading-tight text-white">
-              Built for families, stories, and real live music.
+              {homepageAbout.subtitle}
             </h2>
-            <p className="mt-4 text-lg leading-8 text-[#e7d8c2]">
-              The Cumberland Mountain Music Show was created by Bryan Turner as
-              a place to celebrate the music, stories, and people that make this
-              region special. Built around bluegrass, gospel, country, and
-              traditional mountain music, the show brings families together for
-              an evening of live entertainment in the heart of Cumberland Gap.
+            <p className="mt-4 whitespace-pre-line text-lg leading-8 text-[#e7d8c2]">
+              {homepageAbout.body}
             </p>
           </article>
 

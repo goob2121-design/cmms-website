@@ -57,6 +57,16 @@ const emptyForm: PeopleForm = {
   review_token: "",
 };
 
+type PublicPeopleSettings = {
+  show_meet_the_band: boolean;
+  show_meet_the_team: boolean;
+};
+
+const defaultPublicPeopleSettings: PublicPeopleSettings = {
+  show_meet_the_band: false,
+  show_meet_the_team: false,
+};
+
 function cleanValue(value: string) {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -128,9 +138,12 @@ export default function AdminPeoplePage() {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingPublicSettings, setIsSavingPublicSettings] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [publicPeopleSettings, setPublicPeopleSettings] =
+    useState<PublicPeopleSettings>(defaultPublicPeopleSettings);
 
   const filteredProfiles = useMemo(
     () =>
@@ -159,7 +172,11 @@ export default function AdminPeoplePage() {
       }
 
       setIsCheckingSession(false);
-      await Promise.all([loadProfiles(), loadSubmissions()]);
+      await Promise.all([
+        loadProfiles(),
+        loadSubmissions(),
+        loadPublicPeopleSettings(),
+      ]);
     }
 
     initialize();
@@ -187,6 +204,31 @@ export default function AdminPeoplePage() {
 
     if (error) setErrorMessage(error.message);
     else setSubmissions((data ?? []) as SubmissionWithProfile[]);
+  }
+
+  async function loadPublicPeopleSettings() {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("setting_key,setting_value")
+      .in("setting_key", ["show_meet_the_band", "show_meet_the_team"]);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    const settings = new Map(
+      (data ?? []).map((setting) => [
+        setting.setting_key,
+        setting.setting_value === "true",
+      ]),
+    );
+
+    setPublicPeopleSettings({
+      show_meet_the_band: settings.get("show_meet_the_band") ?? false,
+      show_meet_the_team: settings.get("show_meet_the_team") ?? false,
+    });
   }
 
   function handleTextChange(
@@ -219,6 +261,42 @@ export default function AdminPeoplePage() {
 
   function handleActiveChange(event: ChangeEvent<HTMLInputElement>) {
     setForm((current) => ({ ...current, active: event.target.checked }));
+  }
+
+  function handlePublicPeopleSettingChange(event: ChangeEvent<HTMLInputElement>) {
+    const { name, checked } = event.target;
+    setPublicPeopleSettings((current) => ({
+      ...current,
+      [name]: checked,
+    }));
+  }
+
+  async function savePublicPeopleSettings() {
+    if (!supabase) return;
+    setMessage("");
+    setErrorMessage("");
+    setIsSavingPublicSettings(true);
+    const { error } = await supabase.from("site_settings").upsert(
+      [
+        {
+          setting_key: "show_meet_the_band",
+          setting_value: String(publicPeopleSettings.show_meet_the_band),
+        },
+        {
+          setting_key: "show_meet_the_team",
+          setting_value: String(publicPeopleSettings.show_meet_the_team),
+        },
+      ],
+      { onConflict: "setting_key" },
+    );
+    setIsSavingPublicSettings(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setMessage("Public people section settings saved.");
   }
 
   async function handlePhotoUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -423,6 +501,78 @@ export default function AdminPeoplePage() {
 
       {message ? <p className="mt-6 rounded-md border border-emerald-300/25 bg-emerald-950/35 px-4 py-3 text-sm text-emerald-100">{message}</p> : null}
       {errorMessage ? <p className="mt-6 rounded-md border border-red-300/25 bg-red-950/35 px-4 py-3 text-sm text-red-100">{errorMessage}</p> : null}
+
+      <section className="mt-8 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
+        <h2 className="text-2xl font-semibold text-white">
+          Public People Sections
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-[#d9c8aa]">
+          Control whether the public Meet the Band and Meet the Team pages and
+          navigation links are visible.
+        </p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <label className="flex items-start gap-3 rounded-md border border-[#d7a84f]/15 bg-black/20 p-4 text-[#e7d8c2]">
+            <input
+              type="checkbox"
+              name="show_meet_the_band"
+              checked={publicPeopleSettings.show_meet_the_band}
+              onChange={handlePublicPeopleSettingChange}
+              className="mt-1 h-5 w-5 accent-[#d7a84f]"
+            />
+            <span>
+              <span className="block font-semibold text-white">
+                Show Meet the Band page/nav link
+              </span>
+              <span className="mt-1 block text-sm text-[#d9c8aa]">
+                Turn this on when the band section is ready for visitors.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 rounded-md border border-[#d7a84f]/15 bg-black/20 p-4 text-[#e7d8c2]">
+            <input
+              type="checkbox"
+              name="show_meet_the_team"
+              checked={publicPeopleSettings.show_meet_the_team}
+              onChange={handlePublicPeopleSettingChange}
+              className="mt-1 h-5 w-5 accent-[#d7a84f]"
+            />
+            <span>
+              <span className="block font-semibold text-white">
+                Show Meet the Team page/nav link
+              </span>
+              <span className="mt-1 block text-sm text-[#d9c8aa]">
+                Turn this on when the team section is ready for visitors.
+              </span>
+            </span>
+          </label>
+        </div>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={savePublicPeopleSettings}
+            disabled={isSavingPublicSettings}
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#d7a84f] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0"
+          >
+            {isSavingPublicSettings ? "Saving..." : "Save Public Settings"}
+          </button>
+          <Link
+            href="/meet-the-band?preview=admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/55 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+          >
+            Preview Meet the Band
+          </Link>
+          <Link
+            href="/meet-the-team?preview=admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/55 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+          >
+            Preview Meet the Team
+          </Link>
+        </div>
+      </section>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
         <article className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
