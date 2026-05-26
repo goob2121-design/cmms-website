@@ -7,6 +7,11 @@ import { supabase } from "@/lib/supabase/client";
 
 const adminAreas = [
   {
+    name: "Pages",
+    href: "/admin/pages",
+    description: "Edit About and Contact page content.",
+  },
+  {
     name: "Shows",
     href: "/admin/shows",
     description: "Manage show dates, tickets, descriptions, and visibility.",
@@ -17,16 +22,19 @@ const adminAreas = [
     description: "Manage sponsor profiles, logos, levels, and public visibility.",
   },
   {
-    name: "Photos",
-    description: "Management tools coming next.",
-  },
-  {
-    name: "Videos",
-    description: "Management tools coming next.",
+    name: "People",
+    href: "/admin/people",
+    description: "Manage Meet the Band and Meet the Team profiles.",
   },
   {
     name: "News",
-    description: "Management tools coming next.",
+    href: "/admin/news",
+    description: "Manage public news posts and announcements.",
+  },
+  {
+    name: "Media",
+    href: "/admin/media",
+    description: "Manage public photos and video links.",
   },
 ];
 

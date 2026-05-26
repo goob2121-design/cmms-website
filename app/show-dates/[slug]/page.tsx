@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PromoLightbox } from "@/components/PromoLightbox";
+import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { SponsorLevelBadge } from "@/lib/sponsorLevels";
 import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
 import { getPublishedShowBySlug } from "@/lib/supabase/shows";
@@ -199,6 +200,7 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
               Back to Show Dates
             </Link>
           </div>
+          {show.ticket_url ? <TicketCheckoutNote /> : null}
         </article>
       </section>
 

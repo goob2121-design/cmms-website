@@ -4,9 +4,12 @@ import {
   CalendarDays,
   Handshake,
   Home,
+  Images,
   Link2,
   Mail,
   Music,
+  Newspaper,
+  Users,
   Ticket,
   type LucideIcon,
 } from "lucide-react";
@@ -14,21 +17,33 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const navItems: { label: string; href: string; Icon: LucideIcon }[] = [
-  { label: "Home", href: "/", Icon: Home },
-  { label: "Show Dates", href: "/show-dates", Icon: CalendarDays },
-  { label: "About", href: "/about", Icon: Music },
-  { label: "Sponsors", href: "/sponsors", Icon: Handshake },
-  { label: "Contact", href: "/contact", Icon: Mail },
-  {
-    label: "Facebook",
-    href: "https://facebook.com/cumberlandmountainmusic",
-    Icon: Link2,
-  },
-];
-
-export function Navbar() {
+export function Navbar({
+  showNews = false,
+  showMedia = false,
+  showBand = false,
+  showTeam = false,
+}: {
+  showNews?: boolean;
+  showMedia?: boolean;
+  showBand?: boolean;
+  showTeam?: boolean;
+}) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const navItems: { label: string; href: string; Icon: LucideIcon }[] = [
+    { label: "Home", href: "/", Icon: Home },
+    { label: "Show Dates", href: "/show-dates", Icon: CalendarDays },
+    { label: "About", href: "/about", Icon: Music },
+    ...(showBand
+      ? [{ label: "Meet the Band", href: "/meet-the-band", Icon: Users }]
+      : []),
+    ...(showTeam
+      ? [{ label: "Meet the Team", href: "/meet-the-team", Icon: Users }]
+      : []),
+    { label: "Sponsors", href: "/sponsors", Icon: Handshake },
+    { label: "Contact", href: "/contact", Icon: Mail },
+    ...(showNews ? [{ label: "News", href: "/news", Icon: Newspaper }] : []),
+    ...(showMedia ? [{ label: "Media", href: "/media", Icon: Images }] : []),
+  ];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 24);
@@ -105,10 +120,8 @@ export function Navbar() {
               </Link>
             );
           })}
-          <a
-            href="https://www.pinnaclestudiotn.com/cmms"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/show-dates"
             className="group inline-flex items-center gap-1.5 rounded-full bg-[#d7a84f] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
           >
             <Ticket
@@ -117,6 +130,19 @@ export function Navbar() {
               strokeWidth={2}
             />
             <span>Tickets</span>
+          </Link>
+          <a
+            href="https://facebook.com/cumberlandmountainmusic"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-1.5 transition hover:text-[#f4d28b]"
+          >
+            <Link2
+              aria-hidden="true"
+              className="h-4 w-4 text-[#d7a84f]/78 transition duration-200 group-hover:-translate-y-0.5 group-hover:text-[#f4d28b]"
+              strokeWidth={1.8}
+            />
+            <span>Facebook</span>
           </a>
         </nav>
       </div>

@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HeroFogVideo } from "@/components/HeroFogVideo";
 import { Ticker } from "@/components/Ticker";
+import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { shows } from "./show-dates/showData";
 
@@ -93,17 +95,12 @@ export default async function Home() {
   return (
     <main className="relative z-10">
       <section className="relative min-h-[78svh] overflow-hidden">
-        <div className="absolute inset-x-0 top-0 aspect-[2073/758] max-h-[78svh] min-h-[360px] overflow-hidden sm:min-h-[420px] lg:min-h-0">
-          <Image
-            src="/cmms-header.png"
-            alt="Cumberland Mountain Music live show"
-            fill
-            priority
-            unoptimized
-            sizes="100vw"
-            className="object-contain object-top"
-          />
-        </div>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/cmms-header.png')" }}
+        />
+        <HeroFogVideo />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,6,4,0.74),rgba(8,6,4,0.3)_48%,rgba(8,6,4,0.08)),linear-gradient(180deg,rgba(8,6,4,0.28),rgba(8,6,4,0.08)_34%,rgba(8,6,4,0.78)_68%,rgba(8,6,4,1)),radial-gradient(circle_at_50%_28%,rgba(215,168,79,0.12),transparent_42%)]" />
 
         <div className="relative flex min-h-[78svh] flex-col pt-[124px] sm:pt-[104px]">
@@ -141,10 +138,11 @@ export default async function Home() {
                     href={nextScheduleDate.detailsUrl}
                     className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#f4d28b]/40 bg-black/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#fff7ea] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f4d28b] hover:text-[#f4d28b]"
                   >
-                    Show Details
-                  </a>
-                ) : null}
+                  Show Details
+                </a>
+              ) : null}
               </div>
+              <TicketCheckoutNote />
             </div>
           </div>
         </div>
@@ -256,6 +254,7 @@ export default async function Home() {
             >
               Buy Tickets
             </a>
+            {nextScheduleDate?.ticketUrl ? <TicketCheckoutNote /> : null}
           </article>
         </div>
       </section>

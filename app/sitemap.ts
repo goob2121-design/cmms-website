@@ -7,6 +7,10 @@ const routes = [
   { path: "/show-dates", priority: 0.9 },
   { path: "/show-dates/june-20-2026", priority: 0.85 },
   { path: "/about", priority: 0.8 },
+  { path: "/meet-the-band", priority: 0.75 },
+  { path: "/meet-the-team", priority: 0.72 },
+  { path: "/news", priority: 0.65 },
+  { path: "/media", priority: 0.65 },
   { path: "/sponsors", priority: 0.7 },
   { path: "/contact", priority: 0.7 },
 ];

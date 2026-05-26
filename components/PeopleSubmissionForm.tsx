@@ -1,0 +1,115 @@
+"use client";
+
+import type { FormEvent } from "react";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import type { PeopleProfile } from "@/lib/supabase/people";
+
+export function PeopleSubmissionForm({
+  profile,
+  reviewToken,
+}: {
+  profile: PeopleProfile;
+  reviewToken: string;
+}) {
+  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setErrorMessage("");
+
+    if (!supabase) {
+      setErrorMessage("Submissions are not available right now.");
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    setIsSubmitting(true);
+    const { error } = await supabase.from("people_profile_submissions").insert({
+      profile_id: profile.id,
+      review_token: reviewToken,
+      submitted_name: String(formData.get("submitted_name") ?? "").trim() || null,
+      submitted_role_title:
+        String(formData.get("submitted_role_title") ?? "").trim() || null,
+      submitted_instruments:
+        String(formData.get("submitted_instruments") ?? "").trim() || null,
+      submitted_bio: String(formData.get("submitted_bio") ?? "").trim() || null,
+      submitted_facebook_url:
+        String(formData.get("submitted_facebook_url") ?? "").trim() || null,
+      submitted_website_url:
+        String(formData.get("submitted_website_url") ?? "").trim() || null,
+      submitted_photo_note:
+        String(formData.get("submitted_photo_note") ?? "").trim() || null,
+      status: "pending",
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    event.currentTarget.reset();
+    setMessage("Thanks. Your suggested changes were sent for review.");
+  }
+
+  return (
+    <section className="mt-10 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
+      <h2 className="text-2xl font-semibold text-white">Suggest Changes</h2>
+      <p className="mt-3 leading-7 text-[#d9c8aa]">
+        Share edits you would like the CMMS team to review. These suggestions do
+        not update the public profile until an admin applies them.
+      </p>
+
+      {message ? (
+        <p className="mt-5 rounded-md border border-emerald-300/25 bg-emerald-950/35 px-4 py-3 text-sm text-emerald-100">
+          {message}
+        </p>
+      ) : null}
+      {errorMessage ? (
+        <p className="mt-5 rounded-md border border-red-300/25 bg-red-950/35 px-4 py-3 text-sm text-red-100">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Name</span>
+            <input name="submitted_name" defaultValue={profile.name} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Role Title</span>
+            <input name="submitted_role_title" defaultValue={profile.role_title ?? ""} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Instruments</span>
+            <input name="submitted_instruments" defaultValue={profile.instruments ?? ""} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Facebook URL</span>
+            <input name="submitted_facebook_url" type="url" defaultValue={profile.facebook_url ?? ""} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Website URL</span>
+            <input name="submitted_website_url" type="url" defaultValue={profile.website_url ?? ""} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+          </label>
+        </div>
+        <label className="block">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Bio</span>
+          <textarea name="submitted_bio" defaultValue={profile.bio ?? ""} rows={6} className="mt-2 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 py-3 text-white outline-none transition focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Photo Note</span>
+          <textarea name="submitted_photo_note" rows={3} placeholder="Tell us if you want a different photo used." className="mt-2 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 py-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" />
+        </label>
+        <button type="submit" disabled={isSubmitting} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e] disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0">
+          {isSubmitting ? "Sending..." : "Submit Suggested Changes"}
+        </button>
+      </form>
+    </section>
+  );
+}

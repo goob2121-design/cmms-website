@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PromoLightbox } from "@/components/PromoLightbox";
+import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { shows, venue } from "./showData";
 
@@ -222,6 +223,7 @@ export default async function ShowDatesPage() {
                   </Link>
                 ) : null}
               </div>
+              {featuredEvent.ticketUrl ? <TicketCheckoutNote /> : null}
             </div>
 
             <aside className="rounded-lg border border-[#d7a84f]/20 bg-black/25 p-6">
@@ -300,6 +302,7 @@ export default async function ShowDatesPage() {
                 </Link>
               ) : null}
             </div>
+            {event.ticketUrl ? <TicketCheckoutNote /> : null}
           </article>
         ))}
       </section>

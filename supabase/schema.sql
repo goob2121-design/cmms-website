@@ -6,7 +6,9 @@ create extension if not exists pgcrypto;
 insert into storage.buckets (id, name, public)
 values
   ('sponsor-logos', 'sponsor-logos', true),
-  ('show-promos', 'show-promos', true)
+  ('show-promos', 'show-promos', true),
+  ('media-images', 'media-images', true),
+  ('people-photos', 'people-photos', true)
 on conflict (id) do update set
   public = excluded.public;
 
@@ -86,6 +88,85 @@ create table if not exists public.show_sponsors (
   unique(show_id, sponsor_id)
 );
 
+create table if not exists public.site_pages (
+  id uuid primary key default gen_random_uuid(),
+  page_key text unique not null,
+  title text,
+  body text,
+  image_url text,
+  email text,
+  mailing_list_url text,
+  venue_name text,
+  venue_address text,
+  updated_at timestamptz default now()
+);
+
+alter table public.site_pages add column if not exists email text;
+alter table public.site_pages add column if not exists mailing_list_url text;
+alter table public.site_pages add column if not exists venue_name text;
+alter table public.site_pages add column if not exists venue_address text;
+
+create table if not exists public.news_posts (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  slug text unique not null,
+  excerpt text,
+  body text,
+  image_url text,
+  published boolean default true,
+  published_at timestamptz default now(),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.media_items (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  media_type text not null check (media_type in ('photo', 'video')),
+  image_url text,
+  video_url text,
+  caption text,
+  display_order int default 0,
+  published boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.people_profiles (
+  id uuid primary key default gen_random_uuid(),
+  profile_type text not null check (profile_type in ('band', 'team')),
+  name text not null,
+  slug text unique,
+  role_title text,
+  instruments text,
+  bio text,
+  photo_url text,
+  facebook_url text,
+  website_url text,
+  display_order int default 0,
+  active boolean default true,
+  status text default 'draft' check (status in ('draft', 'published')),
+  review_token text unique,
+  reviewed_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.people_profile_submissions (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid references public.people_profiles(id) on delete cascade,
+  review_token text not null,
+  submitted_name text,
+  submitted_role_title text,
+  submitted_instruments text,
+  submitted_bio text,
+  submitted_facebook_url text,
+  submitted_website_url text,
+  submitted_photo_note text,
+  submitted_at timestamptz default now(),
+  status text default 'pending' check (status in ('pending', 'reviewed', 'applied', 'rejected'))
+);
+
 do $$
 begin
   if not exists (
@@ -101,36 +182,71 @@ begin
 end;
 $$;
 
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'news_posts_slug_format_check'
+      and conrelid = 'public.news_posts'::regclass
+  ) then
+    alter table public.news_posts
+    add constraint news_posts_slug_format_check
+    check (slug ~ '^[a-z0-9-]+$');
+  end if;
+end;
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'people_profiles_slug_format_check'
+      and conrelid = 'public.people_profiles'::regclass
+  ) then
+    alter table public.people_profiles
+    add constraint people_profiles_slug_format_check
+    check (slug is null or slug ~ '^[a-z0-9-]+$');
+  end if;
+end;
+$$;
+
 alter table public.sponsors enable row level security;
 alter table public.show_sponsors enable row level security;
+alter table public.site_pages enable row level security;
+alter table public.news_posts enable row level security;
+alter table public.media_items enable row level security;
+alter table public.people_profiles enable row level security;
+alter table public.people_profile_submissions enable row level security;
 
 drop policy if exists "Public visitors can read CMMS public images" on storage.objects;
 create policy "Public visitors can read CMMS public images"
 on storage.objects
 for select
-using (bucket_id in ('sponsor-logos', 'show-promos'));
+using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
 
 drop policy if exists "Authenticated users can upload CMMS public images" on storage.objects;
 create policy "Authenticated users can upload CMMS public images"
 on storage.objects
 for insert
 to authenticated
-with check (bucket_id in ('sponsor-logos', 'show-promos'));
+with check (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
 
 drop policy if exists "Authenticated users can update CMMS public images" on storage.objects;
 create policy "Authenticated users can update CMMS public images"
 on storage.objects
 for update
 to authenticated
-using (bucket_id in ('sponsor-logos', 'show-promos'))
-with check (bucket_id in ('sponsor-logos', 'show-promos'));
+using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'))
+with check (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
 
 drop policy if exists "Authenticated users can delete CMMS public images" on storage.objects;
 create policy "Authenticated users can delete CMMS public images"
 on storage.objects
 for delete
 to authenticated
-using (bucket_id in ('sponsor-logos', 'show-promos'));
+using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
 
 drop policy if exists "Public visitors can read published shows" on public.shows;
 create policy "Public visitors can read published shows"
@@ -237,6 +353,154 @@ for delete
 to authenticated
 using (true);
 
+drop policy if exists "Public visitors can read site pages" on public.site_pages;
+create policy "Public visitors can read site pages"
+on public.site_pages
+for select
+using (true);
+
+drop policy if exists "Authenticated users can manage site pages" on public.site_pages;
+create policy "Authenticated users can manage site pages"
+on public.site_pages
+for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Public visitors can read published news" on public.news_posts;
+create policy "Public visitors can read published news"
+on public.news_posts
+for select
+using (published = true);
+
+drop policy if exists "Authenticated users can manage news" on public.news_posts;
+create policy "Authenticated users can manage news"
+on public.news_posts
+for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Public visitors can read published media" on public.media_items;
+create policy "Public visitors can read published media"
+on public.media_items
+for select
+using (published = true);
+
+drop policy if exists "Authenticated users can manage media" on public.media_items;
+create policy "Authenticated users can manage media"
+on public.media_items
+for all
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Public visitors can read published people profiles" on public.people_profiles;
+create policy "Public visitors can read published people profiles"
+on public.people_profiles
+for select
+using (active = true and status = 'published');
+
+drop policy if exists "Authenticated users can manage people profiles" on public.people_profiles;
+create policy "Authenticated users can manage people profiles"
+on public.people_profiles
+for all
+to authenticated
+using (true)
+with check (true);
+
+create or replace function public.is_valid_people_review_token(
+  requested_profile_id uuid,
+  token_value text
+)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.people_profiles pp
+    where pp.id = requested_profile_id
+      and pp.review_token = token_value
+      and pp.active = true
+  );
+$$;
+
+grant execute on function public.is_valid_people_review_token(uuid, text) to anon;
+grant execute on function public.is_valid_people_review_token(uuid, text) to authenticated;
+
+drop policy if exists "Public review links can insert people submissions" on public.people_profile_submissions;
+create policy "Public review links can insert people submissions"
+on public.people_profile_submissions
+for insert
+with check (public.is_valid_people_review_token(profile_id, review_token));
+
+drop policy if exists "Authenticated users can manage people submissions" on public.people_profile_submissions;
+create policy "Authenticated users can manage people submissions"
+on public.people_profile_submissions
+for all
+to authenticated
+using (true)
+with check (true);
+
+create or replace function public.get_people_profile_for_review(
+  requested_profile_type text,
+  requested_slug text,
+  token_value text
+)
+returns table (
+  id uuid,
+  profile_type text,
+  name text,
+  slug text,
+  role_title text,
+  instruments text,
+  bio text,
+  photo_url text,
+  facebook_url text,
+  website_url text,
+  display_order int,
+  active boolean,
+  status text,
+  review_token text,
+  reviewed_at timestamptz,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    pp.id,
+    pp.profile_type,
+    pp.name,
+    pp.slug,
+    pp.role_title,
+    pp.instruments,
+    pp.bio,
+    pp.photo_url,
+    pp.facebook_url,
+    pp.website_url,
+    pp.display_order,
+    pp.active,
+    pp.status,
+    pp.review_token,
+    pp.reviewed_at,
+    pp.created_at,
+    pp.updated_at
+  from public.people_profiles pp
+  where pp.profile_type = requested_profile_type
+    and pp.slug = requested_slug
+    and pp.review_token = token_value
+    and pp.active = true
+  limit 1;
+$$;
+
+grant execute on function public.get_people_profile_for_review(text, text, text) to anon;
+grant execute on function public.get_people_profile_for_review(text, text, text) to authenticated;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -258,6 +522,36 @@ create trigger set_sponsors_updated_at
 before update on public.sponsors
 for each row
 execute function public.set_updated_at();
+
+drop trigger if exists set_site_pages_updated_at on public.site_pages;
+create trigger set_site_pages_updated_at
+before update on public.site_pages
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists set_news_posts_updated_at on public.news_posts;
+create trigger set_news_posts_updated_at
+before update on public.news_posts
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists set_media_items_updated_at on public.media_items;
+create trigger set_media_items_updated_at
+before update on public.media_items
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists set_people_profiles_updated_at on public.people_profiles;
+create trigger set_people_profiles_updated_at
+before update on public.people_profiles
+for each row
+execute function public.set_updated_at();
+
+insert into public.site_pages (page_key, title, body, image_url)
+values
+  ('about', 'The Cumberland Mountain Music Show', null, null),
+  ('contact', 'Contact Cumberland Mountain Music', null, null)
+on conflict (page_key) do nothing;
 
 -- Optional seed examples. Re-running this block updates matching slugs.
 insert into public.shows (
