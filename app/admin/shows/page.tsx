@@ -27,6 +27,8 @@ type ShowForm = {
   advance_ticket_price: string;
   door_ticket_price: string;
   ticket_url: string;
+  tickets_available: boolean;
+  sold_out_message: string;
   details_url: string;
   promo_image_url: string;
   short_description: string;
@@ -61,6 +63,8 @@ const emptyForm: ShowForm = {
   advance_ticket_price: "$8",
   door_ticket_price: "$10",
   ticket_url: "",
+  tickets_available: true,
+  sold_out_message: "",
   details_url: "",
   promo_image_url: "",
   short_description:
@@ -90,6 +94,11 @@ const textFields: Array<{
   { name: "advance_ticket_price", label: "Advance Ticket Price" },
   { name: "door_ticket_price", label: "Door Ticket Price" },
   { name: "ticket_url", label: "Ticket URL", type: "url" },
+  {
+    name: "sold_out_message",
+    label: "Sold Out / Ticket Message",
+    placeholder: "Sold Out",
+  },
   { name: "details_url", label: "Details URL" },
   {
     name: "promo_image_url",
@@ -120,6 +129,8 @@ function toForm(show: DbShow): ShowForm {
     advance_ticket_price: show.advance_ticket_price ?? "",
     door_ticket_price: show.door_ticket_price ?? "",
     ticket_url: show.ticket_url ?? "",
+    tickets_available: show.tickets_available !== false,
+    sold_out_message: show.sold_out_message ?? "",
     details_url: show.details_url ?? "",
     promo_image_url: show.promo_image_url ?? "",
     short_description: show.short_description ?? "",
@@ -149,6 +160,8 @@ function toPayload(form: ShowForm) {
     advance_ticket_price: cleanValue(form.advance_ticket_price),
     door_ticket_price: cleanValue(form.door_ticket_price),
     ticket_url: cleanValue(form.ticket_url),
+    tickets_available: form.tickets_available,
+    sold_out_message: cleanValue(form.sold_out_message),
     details_url: cleanValue(form.details_url),
     promo_image_url: cleanValue(form.promo_image_url),
     short_description: cleanValue(form.short_description),
@@ -629,6 +642,11 @@ export default function AdminShowsPage() {
                           Featured
                         </span>
                       ) : null}
+                      {show.tickets_available === false ? (
+                        <span className="rounded-full border border-red-300/35 px-3 py-1 text-xs uppercase tracking-[0.14em] text-red-100">
+                          Tickets Off
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -778,6 +796,16 @@ export default function AdminShowsPage() {
                 className="h-5 w-5 accent-[#d7a84f]"
               />
               Featured
+            </label>
+            <label className="inline-flex items-center gap-3 text-[#e7d8c2]">
+              <input
+                type="checkbox"
+                name="tickets_available"
+                checked={form.tickets_available}
+                onChange={handleCheckboxChange}
+                className="h-5 w-5 accent-[#d7a84f]"
+              />
+              Tickets Available
             </label>
           </div>
 

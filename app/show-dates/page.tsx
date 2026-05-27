@@ -5,6 +5,7 @@ import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
+import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
 import { shows, venue } from "./showData";
 
 export const metadata: Metadata = createPublicPageMetadata({
@@ -27,6 +28,8 @@ type DisplayShow = {
   venueLine: string;
   address?: string;
   ticketUrl?: string;
+  ticketsAvailable?: boolean;
+  soldOutMessage?: string;
   detailsUrl?: string;
   promoImage?: string;
   shortDescription?: string;
@@ -104,6 +107,8 @@ function fromDatabaseShow(show: DbShow): DisplayShow {
     venueLine: show.venue ?? venue.name,
     address: show.address ?? undefined,
     ticketUrl: show.ticket_url ?? undefined,
+    ticketsAvailable: isTicketsAvailable(show.tickets_available),
+    soldOutMessage: show.sold_out_message ?? undefined,
     detailsUrl: show.details_url ?? (show.slug ? `/show-dates/${show.slug}` : undefined),
     promoImage: show.promo_image_url ?? undefined,
     shortDescription: show.short_description ?? undefined,
@@ -125,6 +130,7 @@ function fromFallbackShow(show: (typeof shows)[number]): DisplayShow {
     venueLine: `${venue.name}, ${venue.cityStateZip}`,
     address: `${venue.address}, ${venue.cityStateZip}`,
     ticketUrl: show.ticketUrl,
+    ticketsAvailable: true,
     detailsUrl: show.detailsUrl,
     promoImage: show.promoImage,
     source: "fallback",
@@ -211,15 +217,20 @@ export default async function ShowDatesPage() {
                 {featuredEvent.priceLine}
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                {featuredEvent.ticketUrl ? (
+                {featuredEvent.ticketUrl &&
+                isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
                   <a
                     href={featuredEvent.ticketUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
                   >
-                    Buy Tickets
+                    Buy Advance Tickets
                   </a>
+                ) : !isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
+                  <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/45 bg-black/25 px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
+                    {getSoldOutMessage(featuredEvent.soldOutMessage)}
+                  </span>
                 ) : null}
                 {featuredEvent.detailsUrl ? (
                   <Link
@@ -230,7 +241,10 @@ export default async function ShowDatesPage() {
                   </Link>
                 ) : null}
               </div>
-              {featuredEvent.ticketUrl ? <TicketCheckoutNote /> : null}
+              {featuredEvent.ticketUrl &&
+              isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
+                <TicketCheckoutNote ticketUrl={featuredEvent.ticketUrl} />
+              ) : null}
             </div>
 
             <aside className="rounded-lg border border-[#d7a84f]/20 bg-black/25 p-6">
@@ -328,15 +342,19 @@ export default async function ShowDatesPage() {
               </div>
             </dl>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              {event.ticketUrl ? (
+              {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
                 <a
                   href={event.ticketUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/65 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
                 >
-                  Buy Tickets
+                  Buy Advance Tickets
                 </a>
+              ) : !isTicketsAvailable(event.ticketsAvailable) ? (
+                <span className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/35 bg-black/20 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
+                  {getSoldOutMessage(event.soldOutMessage)}
+                </span>
               ) : null}
               {event.detailsUrl ? (
                 <Link
@@ -347,7 +365,9 @@ export default async function ShowDatesPage() {
                 </Link>
               ) : null}
             </div>
-            {event.ticketUrl ? <TicketCheckoutNote /> : null}
+            {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
+              <TicketCheckoutNote ticketUrl={event.ticketUrl} />
+            ) : null}
           </article>
         ))}
       </section>

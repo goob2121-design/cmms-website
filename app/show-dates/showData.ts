@@ -11,8 +11,7 @@ export const shows = [
     dateValue: "2026-06-20T00:00:00",
     time: "7:00 PM - 9:00 PM",
     title: "Cumberland Mountain Music Show",
-    ticketUrl:
-      "https://pinnaclestudiotn.com/event/6394938/748518290/cumberland-mountain-music-show",
+    ticketUrl: "https://square.link/u/mzWHWprw",
     detailsUrl: "/show-dates/june-20-2026",
     promoImage: "/june-20-promo.png",
   },

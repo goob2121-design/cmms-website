@@ -6,6 +6,7 @@ import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { SponsorLevelBadge } from "@/lib/sponsorLevels";
 import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
 import { getPublishedShowBySlug } from "@/lib/supabase/shows";
+import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
 
 type ShowDetailsPageProps = {
   params: Promise<{ slug: string }>;
@@ -99,6 +100,7 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
   }
 
   const sponsors = await getActiveSponsorsForShow(show.id);
+  const ticketsAvailable = isTicketsAvailable(show.tickets_available);
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-12 pt-32 sm:px-8 lg:pb-16 lg:pt-34">
@@ -210,15 +212,19 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
           )}
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            {show.ticket_url ? (
+            {show.ticket_url && ticketsAvailable ? (
               <a
                 href={show.ticket_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
               >
-                Advanced Tickets
+                Buy Advance Tickets
               </a>
+            ) : !ticketsAvailable ? (
+              <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/45 bg-black/25 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
+                {getSoldOutMessage(show.sold_out_message)}
+              </span>
             ) : null}
             <Link
               href="/show-dates"
@@ -227,7 +233,9 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
               Back to Show Dates
             </Link>
           </div>
-          {show.ticket_url ? <TicketCheckoutNote /> : null}
+          {show.ticket_url && ticketsAvailable ? (
+            <TicketCheckoutNote ticketUrl={show.ticket_url} />
+          ) : null}
         </article>
       </section>
 

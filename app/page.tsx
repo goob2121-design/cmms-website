@@ -9,9 +9,9 @@ import {
   getSiteSetting,
 } from "@/lib/supabase/cms";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
+import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
 import { shows } from "./show-dates/showData";
 
-const generalTicketUrl = "https://www.pinnaclestudiotn.com/cmms";
 const fallbackHomepageAbout = {
   title: "About The Show",
   subtitle: "Built for families, stories, and real live music.",
@@ -30,6 +30,8 @@ type ScheduleItem = {
   advanceTicketPrice?: string;
   doorTicketPrice?: string;
   ticketUrl?: string;
+  ticketsAvailable?: boolean;
+  soldOutMessage?: string;
   detailsUrl?: string;
   promoImageUrl?: string;
   isFeatured?: boolean;
@@ -42,6 +44,7 @@ const fallbackSchedule: ScheduleItem[] = [
     label: show.shortDate,
     date: new Date(show.dateValue),
     ticketUrl: show.ticketUrl,
+    ticketsAvailable: true,
     detailsUrl: show.detailsUrl,
   })),
 ];
@@ -79,6 +82,8 @@ function fromDatabaseShow(show: DbShow): ScheduleItem {
     advanceTicketPrice: show.advance_ticket_price ?? undefined,
     doorTicketPrice: show.door_ticket_price ?? undefined,
     ticketUrl: show.ticket_url ?? undefined,
+    ticketsAvailable: isTicketsAvailable(show.tickets_available),
+    soldOutMessage: show.sold_out_message ?? undefined,
     detailsUrl: show.slug ? `/show-dates/${show.slug}` : undefined,
     promoImageUrl: show.promo_image_url ?? undefined,
     isFeatured: Boolean(show.is_featured),
@@ -111,7 +116,11 @@ export default async function Home() {
           .map(fromDatabaseShow)
       : fallbackSchedule;
   const nextScheduleDate = getNextScheduleDate(schedule);
-  const nextTicketUrl = nextScheduleDate?.ticketUrl ?? generalTicketUrl;
+  const nextTicketsAvailable = isTicketsAvailable(
+    nextScheduleDate?.ticketsAvailable,
+  );
+  const nextTicketUrl = nextScheduleDate?.ticketUrl;
+  const nextTicketHref = nextTicketUrl ?? "/show-dates";
   const homepageAbout = {
     title: homepageAboutPage?.title?.trim() || fallbackHomepageAbout.title,
     subtitle:
@@ -153,14 +162,27 @@ export default async function Home() {
                 Bluegrass • Gospel • Country • Traditional Mountain Music
               </p>
               <div className="mt-7 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
-                <a
-                  href={nextTicketUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
-                >
-                  Buy Tickets
-                </a>
+                {nextScheduleDate && !nextTicketsAvailable ? (
+                  <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/45 bg-black/25 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
+                    {getSoldOutMessage(nextScheduleDate.soldOutMessage)}
+                  </span>
+                ) : nextTicketUrl ? (
+                  <a
+                    href={nextTicketHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
+                  >
+                    Buy Advance Tickets
+                  </a>
+                ) : (
+                  <Link
+                    href={nextTicketHref}
+                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
+                  >
+                    Buy Advance Tickets
+                  </Link>
+                )}
                 <Link
                   href={nextScheduleDate?.detailsUrl ?? "/show-dates"}
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#f4d28b]/65 bg-black/20 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#fff7ea] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f4d28b] hover:text-[#f4d28b]"
@@ -168,7 +190,9 @@ export default async function Home() {
                   View Show Details
                 </Link>
               </div>
-              <TicketCheckoutNote />
+              {nextTicketUrl && nextTicketsAvailable ? (
+                <TicketCheckoutNote ticketUrl={nextTicketUrl} />
+              ) : null}
             </div>
           </div>
         </div>
@@ -244,15 +268,19 @@ export default async function Home() {
                           View Details
                         </Link>
                       ) : null}
-                      {show.ticketUrl ? (
+                      {show.ticketUrl && isTicketsAvailable(show.ticketsAvailable) ? (
                         <a
                           href={show.ticketUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
                         >
-                          Buy Tickets
+                          Buy Advance Tickets
                         </a>
+                      ) : !isTicketsAvailable(show.ticketsAvailable) ? (
+                        <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
+                          {getSoldOutMessage(show.soldOutMessage)}
+                        </span>
                       ) : null}
                     </div>
                     {(show.title || show.time || show.venue || priceLine) && (
@@ -268,15 +296,30 @@ export default async function Home() {
               })}
             </ul>
 
-            <a
-              href={nextScheduleDate?.ticketUrl ?? "/show-dates"}
-              target={nextScheduleDate?.ticketUrl ? "_blank" : undefined}
-              rel={nextScheduleDate?.ticketUrl ? "noopener noreferrer" : undefined}
-              className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-            >
-              Buy Tickets
-            </a>
-            {nextScheduleDate?.ticketUrl ? <TicketCheckoutNote /> : null}
+            {nextScheduleDate && !nextTicketsAvailable ? (
+              <p className="mt-6 inline-flex rounded-full border border-[#d7a84f]/45 bg-black/25 px-5 py-2 text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
+                {getSoldOutMessage(nextScheduleDate.soldOutMessage)}
+              </p>
+            ) : nextTicketUrl ? (
+              <a
+                href={nextTicketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+              >
+                Buy Advance Tickets
+              </a>
+            ) : (
+              <Link
+                href="/show-dates"
+                className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+              >
+                Buy Advance Tickets
+              </Link>
+            )}
+            {nextTicketUrl && nextTicketsAvailable ? (
+              <TicketCheckoutNote ticketUrl={nextTicketUrl} />
+            ) : null}
           </article>
         </div>
       </section>

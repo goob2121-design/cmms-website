@@ -27,6 +27,8 @@ create table if not exists public.shows (
   advance_ticket_price text,
   door_ticket_price text,
   ticket_url text,
+  tickets_available boolean default true,
+  sold_out_message text,
   details_url text,
   promo_image_url text,
   short_description text,
@@ -42,6 +44,8 @@ create table if not exists public.shows (
 alter table public.shows add column if not exists end_time text;
 alter table public.shows add column if not exists advance_ticket_price text;
 alter table public.shows add column if not exists door_ticket_price text;
+alter table public.shows add column if not exists tickets_available boolean default true;
+alter table public.shows add column if not exists sold_out_message text;
 alter table public.shows add column if not exists details_url text;
 alter table public.shows add column if not exists special_guests text;
 alter table public.shows add column if not exists featured_text text;
@@ -835,6 +839,8 @@ insert into public.shows (
   advance_ticket_price,
   door_ticket_price,
   ticket_url,
+  tickets_available,
+  sold_out_message,
   details_url,
   promo_image_url,
   short_description,
@@ -855,7 +861,9 @@ insert into public.shows (
   'Cumberland Gap, TN 37724',
   '$8',
   '$10',
-  'https://pinnaclestudiotn.com/event/6394938/748518290/cumberland-mountain-music-show',
+  'https://square.link/u/mzWHWprw',
+  true,
+  null,
   null,
   '/june-20-promo.png',
   'Family-friendly bluegrass, country, gospel, and traditional mountain music in Cumberland Gap.',
@@ -881,6 +889,8 @@ Advance tickets are just $8 online or $10 at the door, and concessions will be a
   '$8',
   '$10',
   'https://pinnaclestudiotn.com/event/6394941/748518295/cumberland-mountain-music-show',
+  true,
+  null,
   null,
   null,
   'Family-friendly bluegrass, country, gospel, and traditional mountain music in Cumberland Gap.',
@@ -902,6 +912,8 @@ Advance tickets are just $8 online or $10 at the door, and concessions will be a
   '$8',
   '$10',
   'https://pinnaclestudiotn.com/event/6394948/748518307/cumberland-mountain-music-show',
+  true,
+  null,
   null,
   null,
   'Family-friendly bluegrass, country, gospel, and traditional mountain music in Cumberland Gap.',
@@ -923,6 +935,8 @@ Advance tickets are just $8 online or $10 at the door, and concessions will be a
   '$8',
   '$10',
   'https://pinnaclestudiotn.com/event/6394950/748518309/cumberland-mountain-music-christmas-show',
+  true,
+  null,
   null,
   null,
   'A Christmas edition of The Cumberland Mountain Music Show.',
@@ -942,7 +956,9 @@ on conflict (slug) do update set
   address = excluded.address,
   advance_ticket_price = excluded.advance_ticket_price,
   door_ticket_price = excluded.door_ticket_price,
-  ticket_url = excluded.ticket_url,
+  ticket_url = coalesce(public.shows.ticket_url, excluded.ticket_url),
+  tickets_available = coalesce(public.shows.tickets_available, excluded.tickets_available),
+  sold_out_message = coalesce(public.shows.sold_out_message, excluded.sold_out_message),
   details_url = excluded.details_url,
   promo_image_url = excluded.promo_image_url,
   short_description = excluded.short_description,

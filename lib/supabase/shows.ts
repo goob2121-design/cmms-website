@@ -13,6 +13,8 @@ export type DbShow = {
   advance_ticket_price: string | null;
   door_ticket_price: string | null;
   ticket_url: string | null;
+  tickets_available: boolean | null;
+  sold_out_message: string | null;
   details_url: string | null;
   promo_image_url: string | null;
   short_description: string | null;
@@ -26,7 +28,24 @@ export type DbShow = {
 };
 
 const selectFields =
+  "id,title,slug,show_date,doors_time,show_time,end_time,venue,address,advance_ticket_price,door_ticket_price,ticket_url,tickets_available,sold_out_message,details_url,promo_image_url,short_description,full_details,special_guests,featured_text,is_featured,published,created_at,updated_at";
+const legacySelectFields =
   "id,title,slug,show_date,doors_time,show_time,end_time,venue,address,advance_ticket_price,door_ticket_price,ticket_url,details_url,promo_image_url,short_description,full_details,special_guests,featured_text,is_featured,published,created_at,updated_at";
+
+function isMissingTicketColumnError(error: { message?: string }) {
+  return (
+    error.message?.includes("tickets_available") ||
+    error.message?.includes("sold_out_message")
+  );
+}
+
+function withTicketDefaults(show: DbShow) {
+  return {
+    ...show,
+    tickets_available: show.tickets_available ?? null,
+    sold_out_message: show.sold_out_message ?? null,
+  } as DbShow;
+}
 
 export async function getPublishedShows() {
   if (!supabase) {
@@ -40,11 +59,23 @@ export async function getPublishedShows() {
     .order("show_date", { ascending: true });
 
   if (error) {
+    if (isMissingTicketColumnError(error)) {
+      const { data: legacyData, error: legacyError } = await supabase
+        .from("shows")
+        .select(legacySelectFields)
+        .eq("published", true)
+        .order("show_date", { ascending: true });
+
+      if (!legacyError) {
+        return ((legacyData ?? []) as DbShow[]).map(withTicketDefaults);
+      }
+    }
+
     console.warn("Unable to load Supabase shows:", error.message);
     return [];
   }
 
-  return (data ?? []) as DbShow[];
+  return ((data ?? []) as DbShow[]).map(withTicketDefaults);
 }
 
 export async function getNextPublishedShow() {
@@ -63,11 +94,26 @@ export async function getNextPublishedShow() {
     .maybeSingle();
 
   if (error) {
+    if (isMissingTicketColumnError(error)) {
+      const { data: legacyData, error: legacyError } = await supabase
+        .from("shows")
+        .select(legacySelectFields)
+        .eq("published", true)
+        .gte("show_date", today)
+        .order("show_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (!legacyError && legacyData) {
+        return withTicketDefaults(legacyData as DbShow);
+      }
+    }
+
     console.warn("Unable to load next Supabase show:", error.message);
     return null;
   }
 
-  return data as DbShow | null;
+  return data ? withTicketDefaults(data as DbShow) : null;
 }
 
 export async function getPublishedShowBySlug(slug: string) {
@@ -83,9 +129,22 @@ export async function getPublishedShowBySlug(slug: string) {
     .maybeSingle();
 
   if (error) {
+    if (isMissingTicketColumnError(error)) {
+      const { data: legacyData, error: legacyError } = await supabase
+        .from("shows")
+        .select(legacySelectFields)
+        .eq("slug", slug)
+        .eq("published", true)
+        .maybeSingle();
+
+      if (!legacyError && legacyData) {
+        return withTicketDefaults(legacyData as DbShow);
+      }
+    }
+
     console.warn(`Unable to load Supabase show "${slug}":`, error.message);
     return null;
   }
 
-  return data as DbShow | null;
+  return data ? withTicketDefaults(data as DbShow) : null;
 }
