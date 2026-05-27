@@ -6,13 +6,19 @@ type ProfilePhotoProps = {
   src?: string | null;
   alt: string;
   className?: string;
+  mode?: "show" | "coming_soon";
 };
 
-export function ProfilePhoto({ src, alt, className = "" }: ProfilePhotoProps) {
+export function ProfilePhoto({
+  src,
+  alt,
+  className = "",
+  mode = "show",
+}: ProfilePhotoProps) {
   const [hasImageError, setHasImageError] = useState(false);
   const imageSrc = src?.trim();
 
-  if (imageSrc && !hasImageError) {
+  if (mode === "show" && imageSrc && !hasImageError) {
     return (
       <img
         src={imageSrc}

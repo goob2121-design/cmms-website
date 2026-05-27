@@ -44,12 +44,19 @@ export async function generateMetadata({
 export const dynamic = "force-dynamic";
 
 function ProfileImage({ member }: { member: PeopleProfile }) {
+  if (member.photo_display_mode === "hide") return null;
+
   return (
     <div className="overflow-hidden rounded-lg border border-[#d7a84f]/25 bg-[linear-gradient(135deg,rgba(215,168,79,0.18),rgba(0,0,0,0.34))] shadow-[0_24px_80px_rgba(0,0,0,0.34)]">
       <div className="aspect-[4/5]">
         <ProfilePhoto
           src={member.photo_url}
           alt={member.name}
+          mode={
+            member.photo_display_mode === "coming_soon"
+              ? "coming_soon"
+              : "show"
+          }
           className="h-full w-full object-cover"
         />
       </div>

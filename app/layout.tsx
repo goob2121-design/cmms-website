@@ -13,6 +13,7 @@ import {
   hasPublishedMedia,
   hasPublishedNews,
 } from "@/lib/supabase/cms";
+import { getNextPublishedShow } from "@/lib/supabase/shows";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -55,15 +56,25 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [showNews, showMedia, showBandSetting, showTeamSetting] =
+  const [
+    showNews,
+    showMedia,
+    showBandSetting,
+    showTeamSetting,
+    nextShow,
+  ] =
     await Promise.all([
     hasPublishedNews(),
     hasPublishedMedia(),
     getSiteSetting("show_meet_the_band"),
     getSiteSetting("show_meet_the_team"),
+    getNextPublishedShow(),
   ]);
   const showBand = showBandSetting?.setting_value === "true";
   const showTeam = showTeamSetting?.setting_value === "true";
+  const nextShowAnnouncement = nextShow
+    ? getNextShowAnnouncement(nextShow)
+    : null;
 
   return (
     <html lang="en" className="h-full antialiased">
@@ -76,6 +87,7 @@ export default async function RootLayout({
             showMedia={showMedia}
             showBand={showBand}
             showTeam={showTeam}
+            nextShowAnnouncement={nextShowAnnouncement}
           />
 
           {children}
@@ -98,6 +110,12 @@ export default async function RootLayout({
               >
                 Contact
               </Link>
+              <Link
+                href="/become-a-sponsor"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
+              >
+                Become a Sponsor
+              </Link>
             </div>
             <Link
               href="/admin"
@@ -110,4 +128,39 @@ export default async function RootLayout({
       </body>
     </html>
   );
+}
+
+function getNextShowAnnouncement(show: {
+  show_date: string;
+  advance_ticket_price?: string | null;
+}) {
+  const today = new Date();
+  const todayStart = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate(),
+  );
+  const [year, month, day] = show.show_date.split("-").map(Number);
+  const showStart = Date.UTC(year, month - 1, day);
+  const daysUntil = Math.ceil((showStart - todayStart) / 86_400_000);
+  const showDateLabel = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(showStart));
+  const daysLabel = daysUntil <= 0 ? "Today" : `${daysUntil} Days Away`;
+  const ticketPrice = formatTicketPrice(show.advance_ticket_price);
+  const ticketLabel = ticketPrice
+    ? ` • Advance Tickets ${ticketPrice}`
+    : "";
+
+  return `Next Show: ${showDateLabel} • ${daysLabel}${ticketLabel}`;
+}
+
+function formatTicketPrice(price?: string | null) {
+  if (!price) return null;
+  const trimmed = price.trim();
+  if (!trimmed) return null;
+  return trimmed.startsWith("$") ? trimmed : `$${trimmed}`;
 }

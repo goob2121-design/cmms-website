@@ -24,6 +24,7 @@ type PeopleForm = {
   bio: string;
   hobbies_interests: string;
   photo_url: string;
+  photo_display_mode: "show" | "hide" | "coming_soon";
   facebook_url: string;
   website_url: string;
   display_order: string;
@@ -40,6 +41,14 @@ type SubmissionWithProfile = PeopleProfileSubmission & {
   } | null;
 };
 
+type SubmissionChange = {
+  label: string;
+  profileField: string;
+  current: string;
+  submitted: string;
+  multiline: boolean;
+};
+
 const emptyForm: PeopleForm = {
   profile_type: "band",
   name: "",
@@ -49,6 +58,7 @@ const emptyForm: PeopleForm = {
   bio: "",
   hobbies_interests: "",
   photo_url: "",
+  photo_display_mode: "show",
   facebook_url: "",
   website_url: "",
   display_order: "0",
@@ -72,6 +82,20 @@ function cleanValue(value: string) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function submittedValue(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+}
+
+function valuesAreDifferent(
+  currentValue: string | null | undefined,
+  submitted: string | null | undefined,
+) {
+  const cleanSubmitted = submittedValue(submitted);
+  if (!cleanSubmitted) return false;
+  return (currentValue?.trim() ?? "") !== cleanSubmitted;
+}
+
 function toForm(profile: PeopleProfile): PeopleForm {
   return {
     id: profile.id,
@@ -83,6 +107,7 @@ function toForm(profile: PeopleProfile): PeopleForm {
     bio: profile.bio ?? "",
     hobbies_interests: profile.hobbies_interests ?? "",
     photo_url: profile.photo_url ?? "",
+    photo_display_mode: profile.photo_display_mode ?? "show",
     facebook_url: profile.facebook_url ?? "",
     website_url: profile.website_url ?? "",
     display_order: String(profile.display_order ?? 0),
@@ -102,6 +127,7 @@ function toPayload(form: PeopleForm) {
     bio: cleanValue(form.bio),
     hobbies_interests: cleanValue(form.hobbies_interests),
     photo_url: cleanValue(form.photo_url),
+    photo_display_mode: form.photo_display_mode,
     facebook_url: cleanValue(form.facebook_url),
     website_url: cleanValue(form.website_url),
     display_order: Number.parseInt(form.display_order, 10) || 0,
@@ -129,12 +155,37 @@ function getPublicLink(profile: Pick<PeopleForm, "profile_type" | "slug">) {
   return `${getOrigin()}${getProfileBasePath(profile.profile_type)}/${profile.slug}`;
 }
 
+function formatSubmittedAt(value: string | null) {
+  if (!value) return "Unknown date";
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function getSubmissionSignature(submission: PeopleProfileSubmission) {
+  return JSON.stringify({
+    name: submittedValue(submission.submitted_name),
+    role_title: submittedValue(submission.submitted_role_title),
+    instruments: submittedValue(submission.submitted_instruments),
+    bio: submittedValue(submission.submitted_bio),
+    hobbies_interests: submittedValue(submission.submitted_hobbies_interests),
+    facebook_url: submittedValue(submission.submitted_facebook_url),
+    website_url: submittedValue(submission.submitted_website_url),
+    photo_url: submittedValue(submission.submitted_photo_url),
+    photo_note: submittedValue(submission.submitted_photo_note),
+  });
+}
+
 export default function AdminPeoplePage() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<PeopleProfile[]>([]);
   const [submissions, setSubmissions] = useState<SubmissionWithProfile[]>([]);
   const [form, setForm] = useState<PeopleForm>(emptyForm);
   const [filter, setFilter] = useState<"all" | ProfileType>("all");
+  const [submissionStatusFilter, setSubmissionStatusFilter] = useState<
+    "all" | "pending"
+  >("all");
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -156,6 +207,72 @@ export default function AdminPeoplePage() {
         ),
     [profiles, filter],
   );
+
+  const pendingSubmissions = useMemo(
+    () => submissions.filter((submission) => submission.status === "pending"),
+    [submissions],
+  );
+
+  const pendingProfileIds = useMemo(
+    () => new Set(pendingSubmissions.map((submission) => submission.profile_id)),
+    [pendingSubmissions],
+  );
+
+  const visibleSubmissions = useMemo(
+    () =>
+      submissionStatusFilter === "pending" ? pendingSubmissions : submissions,
+    [pendingSubmissions, submissionStatusFilter, submissions],
+  );
+
+  const pendingDuplicateSignatures = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    pendingSubmissions.forEach((submission) => {
+      const key = `${submission.profile_id}:${getSubmissionSignature(submission)}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+
+    return counts;
+  }, [pendingSubmissions]);
+
+  const groupedVisibleSubmissions = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        profile: PeopleProfile | undefined;
+        profileName: string;
+        submissions: SubmissionWithProfile[];
+      }
+    >();
+
+    visibleSubmissions.forEach((submission) => {
+      const profile = profiles.find((item) => item.id === submission.profile_id);
+      const groupKey = submission.profile_id;
+      const existing = groups.get(groupKey);
+
+      if (existing) {
+        existing.submissions.push(submission);
+        return;
+      }
+
+      groups.set(groupKey, {
+        profile,
+        profileName:
+          profile?.name ?? submission.people_profiles?.name ?? "Unknown Profile",
+        submissions: [submission],
+      });
+    });
+
+    return Array.from(groups.values());
+  }, [profiles, visibleSubmissions]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("filter") === "pending") {
+      setSubmissionStatusFilter("pending");
+    }
+  }, []);
 
   useEffect(() => {
     async function initialize() {
@@ -342,6 +459,16 @@ export default function AdminPeoplePage() {
     setMessage(`${label}: ${link}`);
   }
 
+  function openReviewLink(profile: PeopleProfile) {
+    const link = getReviewLink(toForm(profile));
+    if (!link) {
+      setErrorMessage("Save the profile with a slug before opening this link.");
+      return;
+    }
+
+    window.open(link, "_blank", "noopener,noreferrer");
+  }
+
   function startNewProfile(profileType: ProfileType = "band") {
     setForm({ ...emptyForm, profile_type: profileType });
     setSlugManuallyEdited(false);
@@ -428,43 +555,27 @@ export default function AdminPeoplePage() {
 
   async function applySubmission(submission: PeopleProfileSubmission) {
     if (!supabase) return;
+    const currentProfile = profiles.find(
+      (profile) => profile.id === submission.profile_id,
+    );
+    const changes = getSubmissionChanges(submission, currentProfile);
+    const updates: Record<string, string> = {
+      reviewed_at: new Date().toISOString(),
+    };
+
+    changes.forEach((change) => {
+      if (change.profileField) updates[change.profileField] = change.submitted;
+    });
+
     const { error } = await supabase
       .from("people_profiles")
-      .update({
-        name: submission.submitted_name?.trim() || undefined,
-        role_title: submission.submitted_role_title?.trim() || null,
-        instruments: submission.submitted_instruments?.trim() || null,
-        bio: submission.submitted_bio?.trim() || null,
-        hobbies_interests: submission.submitted_hobbies_interests?.trim() || null,
-        facebook_url: submission.submitted_facebook_url?.trim() || null,
-        website_url: submission.submitted_website_url?.trim() || null,
-        reviewed_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq("id", submission.profile_id);
     if (error) {
       setErrorMessage(error.message);
       return;
     }
     await updateSubmissionStatus(submission, "applied");
-    await loadProfiles();
-  }
-
-  async function applySubmittedPhoto(submission: PeopleProfileSubmission) {
-    if (!supabase || !submission.submitted_photo_url) return;
-    const { error } = await supabase
-      .from("people_profiles")
-      .update({
-        photo_url: submission.submitted_photo_url,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq("id", submission.profile_id);
-
-    if (error) {
-      setErrorMessage(error.message);
-      return;
-    }
-
-    setMessage("Submitted photo applied to the profile.");
     await loadProfiles();
   }
 
@@ -481,6 +592,128 @@ export default function AdminPeoplePage() {
     }
   }
 
+  function getSubmissionChanges(
+    submission: PeopleProfileSubmission,
+    currentProfile: PeopleProfile | undefined,
+  ) {
+    const fields = [
+      {
+        label: "Name",
+        profileField: "name",
+        current: currentProfile?.name,
+        submitted: submission.submitted_name,
+      },
+      {
+        label: "Role Title",
+        profileField: "role_title",
+        current: currentProfile?.role_title,
+        submitted: submission.submitted_role_title,
+      },
+      {
+        label: "Instruments",
+        profileField: "instruments",
+        current: currentProfile?.instruments,
+        submitted: submission.submitted_instruments,
+      },
+      {
+        label: "Bio",
+        profileField: "bio",
+        current: currentProfile?.bio,
+        submitted: submission.submitted_bio,
+        multiline: true,
+      },
+      {
+        label: "Hobbies & Interests",
+        profileField: "hobbies_interests",
+        current: currentProfile?.hobbies_interests,
+        submitted: submission.submitted_hobbies_interests,
+        multiline: true,
+      },
+      {
+        label: "Facebook URL",
+        profileField: "facebook_url",
+        current: currentProfile?.facebook_url,
+        submitted: submission.submitted_facebook_url,
+      },
+      {
+        label: "Website URL",
+        profileField: "website_url",
+        current: currentProfile?.website_url,
+        submitted: submission.submitted_website_url,
+      },
+      {
+        label: "Photo URL",
+        profileField: "photo_url",
+        current: currentProfile?.photo_url,
+        submitted: submission.submitted_photo_url,
+      },
+    ] as const;
+
+    const changedFields: SubmissionChange[] = fields
+      .filter((field) => valuesAreDifferent(field.current, field.submitted))
+      .map((field) => ({
+        label: field.label,
+        profileField: field.profileField,
+        current: field.current?.trim() || "Not set",
+        submitted: submittedValue(field.submitted) ?? "",
+        multiline: "multiline" in field ? Boolean(field.multiline) : false,
+      }));
+
+    const photoNote = submittedValue(submission.submitted_photo_note);
+    if (photoNote) {
+      changedFields.push({
+        label: "Photo Note",
+        profileField: "",
+        current: "Not set",
+        submitted: photoNote,
+        multiline: true,
+      });
+    }
+
+    return changedFields;
+  }
+
+  function renderChange(change: {
+    label: string;
+    current: string;
+    submitted: string;
+    multiline: boolean;
+  }) {
+    return (
+      <div className="rounded-md border border-[#d7a84f]/15 bg-black/20 p-3">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
+          {change.label}
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a9946e]">
+              Current
+            </p>
+            <p
+              className={`mt-1 text-sm leading-6 text-[#d9c8aa] ${
+                change.multiline ? "whitespace-pre-line" : "break-words"
+              }`}
+            >
+              {change.current}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a9946e]">
+              Submitted
+            </p>
+            <p
+              className={`mt-1 text-sm leading-6 text-white ${
+                change.multiline ? "whitespace-pre-line" : "break-words"
+              }`}
+            >
+              {change.submitted}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isCheckingSession) {
     return (
       <main className="relative z-10 mx-auto min-h-svh w-full max-w-6xl px-6 pb-14 pt-40 text-[#e7d8c2] sm:px-8">
@@ -494,7 +727,14 @@ export default function AdminPeoplePage() {
       <section className="flex flex-col gap-5 border-b border-[#d7a84f]/18 pb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">People Manager</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">Manage People Profiles</h1>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">Manage People Profiles</h1>
+            {pendingSubmissions.length > 0 ? (
+              <span className="w-fit rounded-full border border-[#d7a84f]/45 bg-[#d7a84f]/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
+                {pendingSubmissions.length} Pending
+              </span>
+            ) : null}
+          </div>
         </div>
         <Link href="/admin/dashboard" className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/65 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]">Dashboard</Link>
       </section>
@@ -591,11 +831,19 @@ export default function AdminPeoplePage() {
             {filteredProfiles.length === 0 ? <p className="text-[#d9c8aa]">No profiles found yet.</p> : null}
             {filteredProfiles.map((profile) => (
               <div key={profile.id} className="rounded-md border border-[#d7a84f]/15 bg-black/25 p-4">
-                <h3 className="font-semibold text-white">{profile.name}</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold text-white">{profile.name}</h3>
+                  {pendingProfileIds.has(profile.id) ? (
+                    <span className="rounded-full border border-[#d7a84f]/45 bg-[#d7a84f]/15 px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#f4d28b]">
+                      Pending Review
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-1 text-sm text-[#d9c8aa]">{profile.profile_type} / {profile.slug ?? "no-slug"}</p>
                 <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[#f4d28b]">Order {profile.display_order ?? 0} / {profile.active ? "Active" : "Inactive"} / {profile.status === "published" ? "Published" : "Draft"}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button type="button" onClick={() => startEdit(profile)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Edit</button>
+                  <button type="button" onClick={() => openReviewLink(profile)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Open Review Link</button>
                   <button type="button" onClick={() => copyLink(getReviewLink(toForm(profile)), "Review link")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Copy Review Link</button>
                   <button type="button" onClick={() => copyLink(getPublicLink(toForm(profile)), "Public link")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Copy Public Link</button>
                   <button type="button" onClick={() => toggleActive(profile)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">{profile.active ? "Deactivate" : "Activate"}</button>
@@ -611,6 +859,7 @@ export default function AdminPeoplePage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <label className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Type</span><select name="profile_type" value={form.profile_type} onChange={handleSelectChange} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"><option value="band">Band</option><option value="team">Team</option></select></label>
             <label className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Status</span><select name="status" value={form.status} onChange={handleSelectChange} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"><option value="draft">Draft</option><option value="published">Published</option></select></label>
+            <label className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Photo Display</span><select name="photo_display_mode" value={form.photo_display_mode} onChange={handleSelectChange} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"><option value="show">Show Photo</option><option value="hide">Hide Photo</option><option value="coming_soon">Photo Coming Soon</option></select></label>
             {["name", "slug", "role_title", "instruments", "photo_url", "facebook_url", "website_url", "display_order"].map((field) => (
               <label key={field} className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">{field.replace("_", " ")}</span><input name={field} type={field.includes("url") ? "url" : field === "display_order" ? "number" : "text"} value={String(form[field as keyof PeopleForm] ?? "")} onChange={handleTextChange} required={field === "name"} pattern={field === "slug" ? "[a-z0-9-]+" : undefined} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25" /></label>
             ))}
@@ -636,17 +885,110 @@ export default function AdminPeoplePage() {
       </section>
 
       <section className="mt-8 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
-        <h2 className="text-2xl font-semibold text-white">Pending Bio Updates</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-white">Pending Bio Updates</h2>
+            <p className="mt-2 text-sm text-[#d9c8aa]">
+              Review submitted profile changes before applying them publicly.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setSubmissionStatusFilter("pending")} className={`rounded-full border px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${submissionStatusFilter === "pending" ? "border-[#d7a84f] bg-[#d7a84f] text-[#120d07]" : "border-[#d7a84f]/45 text-[#f8efe2] hover:text-[#f4d28b]"}`}>Pending Only</button>
+            <button type="button" onClick={() => setSubmissionStatusFilter("all")} className={`rounded-full border px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${submissionStatusFilter === "all" ? "border-[#d7a84f] bg-[#d7a84f] text-[#120d07]" : "border-[#d7a84f]/45 text-[#f8efe2] hover:text-[#f4d28b]"}`}>All Submissions</button>
+          </div>
+        </div>
         <div className="mt-5 grid gap-4">
-          {submissions.length === 0 ? <p className="text-[#d9c8aa]">No submissions yet.</p> : null}
-          {submissions.map((submission) => (
-            <article key={submission.id} className="rounded-md border border-[#d7a84f]/15 bg-black/25 p-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div><h3 className="font-semibold text-white">{submission.people_profiles?.name ?? "Profile"}</h3><p className="mt-1 text-sm uppercase tracking-[0.14em] text-[#f4d28b]">{submission.status} / {submission.people_profiles?.profile_type ?? "person"}</p>{submission.submitted_photo_url ? <div className="mt-4 h-48 max-w-xs overflow-hidden rounded-md border border-[#d7a84f]/20"><ProfilePhoto src={submission.submitted_photo_url} alt={`${submission.people_profiles?.name ?? "Profile"} submitted photo`} className="h-full w-full object-cover" /></div> : null}<div className="mt-4 space-y-2 text-sm leading-6 text-[#d9c8aa]">{submission.submitted_name ? <p>Name: {submission.submitted_name}</p> : null}{submission.submitted_role_title ? <p>Role: {submission.submitted_role_title}</p> : null}{submission.submitted_instruments ? <p>Instruments: {submission.submitted_instruments}</p> : null}{submission.submitted_facebook_url ? <p>Facebook: {submission.submitted_facebook_url}</p> : null}{submission.submitted_website_url ? <p>Website: {submission.submitted_website_url}</p> : null}{submission.submitted_bio ? <p className="whitespace-pre-line">Bio: {submission.submitted_bio}</p> : null}{submission.submitted_hobbies_interests ? <p className="whitespace-pre-line">Hobbies &amp; Interests: {submission.submitted_hobbies_interests}</p> : null}{submission.submitted_photo_note ? <p className="whitespace-pre-line">Photo note: {submission.submitted_photo_note}</p> : null}</div></div>
-                <div className="flex flex-wrap gap-2"><button type="button" onClick={() => applySubmission(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply</button>{submission.submitted_photo_url ? <button type="button" onClick={() => applySubmittedPhoto(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply Submitted Photo</button> : null}<button type="button" onClick={() => updateSubmissionStatus(submission, "reviewed")} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Reviewed</button><button type="button" onClick={() => updateSubmissionStatus(submission, "rejected")} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Reject</button><button type="button" onClick={() => deleteSubmission(submission)} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Delete</button></div>
-              </div>
-            </article>
-          ))}
+          {groupedVisibleSubmissions.length === 0 ? <p className="text-[#d9c8aa]">No submissions found.</p> : null}
+          {groupedVisibleSubmissions.map((group) => {
+            const pendingCount = group.submissions.filter(
+              (submission) => submission.status === "pending",
+            ).length;
+
+            return (
+              <article key={group.profileName} className="rounded-lg border border-[#d7a84f]/20 bg-black/20 p-4">
+                <div className="flex flex-col gap-2 border-b border-[#d7a84f]/15 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <h3 className="text-xl font-semibold text-white">
+                    {group.profileName}{" "}
+                    <span className="text-[#d9c8aa]">
+                      - {pendingCount} pending{" "}
+                      {pendingCount === 1 ? "submission" : "submissions"}
+                    </span>
+                  </h3>
+                  {group.profile ? (
+                    <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
+                      {group.profile.profile_type}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 grid gap-3">
+                  {group.submissions.map((submission) => {
+                    const changes = getSubmissionChanges(
+                      submission,
+                      group.profile,
+                    );
+                    const isPending = submission.status === "pending";
+                    const duplicateKey = `${submission.profile_id}:${getSubmissionSignature(submission)}`;
+                    const isPossibleDuplicate =
+                      isPending &&
+                      (pendingDuplicateSignatures.get(duplicateKey) ?? 0) > 1;
+                    const hasNoChanges = changes.length === 0;
+
+                    return (
+                      <section key={submission.id} className={`rounded-md border p-4 ${isPending ? "border-[#d7a84f]/35 bg-[#d7a84f]/10" : "border-[#d7a84f]/15 bg-black/25"}`}>
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#f4d28b]">
+                                Submitted {formatSubmittedAt(submission.submitted_at)}
+                              </p>
+                              <span className={`rounded-full border px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] ${isPending ? "border-[#d7a84f]/45 bg-[#d7a84f]/15 text-[#f4d28b]" : "border-[#d7a84f]/25 text-[#d9c8aa]"}`}>
+                                {submission.status ?? "pending"}
+                              </span>
+                              {isPossibleDuplicate ? (
+                                <span className="rounded-full border border-amber-200/35 bg-amber-400/10 px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-amber-100">
+                                  Possible duplicate
+                                </span>
+                              ) : null}
+                            </div>
+                            {hasNoChanges ? (
+                              <p className="mt-3 rounded-md border border-[#d7a84f]/15 bg-black/25 px-3 py-2 text-sm text-[#d9c8aa]">
+                                No changes detected in this submission.
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={() => applySubmission(submission)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2] transition hover:text-[#f4d28b]">Apply Changes</button>
+                            <button type="button" onClick={() => updateSubmissionStatus(submission, "reviewed")} className={`rounded-full border px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${hasNoChanges ? "border-[#d7a84f] bg-[#d7a84f] text-[#120d07]" : "border-[#d7a84f]/45 text-[#f8efe2] hover:text-[#f4d28b]"}`}>Mark Reviewed</button>
+                            <button type="button" onClick={() => updateSubmissionStatus(submission, "rejected")} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100 transition hover:border-red-200">Reject</button>
+                            <button type="button" onClick={() => deleteSubmission(submission)} className={`rounded-full border px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] transition ${hasNoChanges ? "border-red-200 bg-red-400/15 text-red-100" : "border-red-300/35 text-red-100 hover:border-red-200"}`}>Delete</button>
+                          </div>
+                        </div>
+
+                        {submission.submitted_photo_url && changes.some((change) => change.profileField === "photo_url") ? (
+                          <div className="mt-4 aspect-[4/3] max-w-[220px] overflow-hidden rounded-md border border-[#d7a84f]/20">
+                            <ProfilePhoto
+                              src={submission.submitted_photo_url}
+                              alt="Submitted profile preview"
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : null}
+
+                        {changes.length > 0 ? (
+                          <div className="mt-4 grid gap-3">
+                            {changes.map((change) => (
+                              <div key={change.label}>{renderChange(change)}</div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </section>
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>

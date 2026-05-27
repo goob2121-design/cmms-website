@@ -2,6 +2,24 @@
 alter table public.people_profiles
 add column if not exists hobbies_interests text;
 
+alter table public.people_profiles
+add column if not exists photo_display_mode text default 'show';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'people_profiles_photo_display_mode_check'
+      and conrelid = 'public.people_profiles'::regclass
+  ) then
+    alter table public.people_profiles
+    add constraint people_profiles_photo_display_mode_check
+    check (photo_display_mode in ('show', 'hide', 'coming_soon'));
+  end if;
+end;
+$$;
+
 alter table public.people_profile_submissions
 add column if not exists submitted_hobbies_interests text;
 
@@ -20,6 +38,7 @@ returns table (
   bio text,
   hobbies_interests text,
   photo_url text,
+  photo_display_mode text,
   facebook_url text,
   website_url text,
   display_order int,
@@ -44,6 +63,7 @@ as $$
     pp.bio,
     pp.hobbies_interests,
     pp.photo_url,
+    pp.photo_display_mode,
     pp.facebook_url,
     pp.website_url,
     pp.display_order,

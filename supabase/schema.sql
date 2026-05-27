@@ -89,6 +89,33 @@ create table if not exists public.show_sponsors (
   unique(show_id, sponsor_id)
 );
 
+create table if not exists public.sponsor_inquiries (
+  id uuid primary key default gen_random_uuid(),
+  business_name text,
+  contact_name text not null,
+  email text not null,
+  phone text,
+  sponsor_interest text,
+  message text,
+  status text default 'new' check (status in ('new', 'contacted', 'follow-up', 'closed')),
+  created_at timestamptz default now()
+);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'sponsor_inquiries_status_check'
+      and conrelid = 'public.sponsor_inquiries'::regclass
+  ) then
+    alter table public.sponsor_inquiries
+    add constraint sponsor_inquiries_status_check
+    check (status in ('new', 'contacted', 'follow-up', 'closed'));
+  end if;
+end;
+$$;
+
 create table if not exists public.site_pages (
   id uuid primary key default gen_random_uuid(),
   page_key text unique not null,
@@ -161,6 +188,7 @@ create table if not exists public.people_profiles (
   bio text,
   hobbies_interests text,
   photo_url text,
+  photo_display_mode text default 'show' check (photo_display_mode in ('show', 'hide', 'coming_soon')),
   facebook_url text,
   website_url text,
   display_order int default 0,
@@ -173,6 +201,22 @@ create table if not exists public.people_profiles (
 );
 
 alter table public.people_profiles add column if not exists hobbies_interests text;
+alter table public.people_profiles add column if not exists photo_display_mode text default 'show';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'people_profiles_photo_display_mode_check'
+      and conrelid = 'public.people_profiles'::regclass
+  ) then
+    alter table public.people_profiles
+    add constraint people_profiles_photo_display_mode_check
+    check (photo_display_mode in ('show', 'hide', 'coming_soon'));
+  end if;
+end;
+$$;
 
 create table if not exists public.people_profile_submissions (
   id uuid primary key default gen_random_uuid(),
@@ -244,6 +288,7 @@ $$;
 
 alter table public.sponsors enable row level security;
 alter table public.show_sponsors enable row level security;
+alter table public.sponsor_inquiries enable row level security;
 alter table public.site_pages enable row level security;
 alter table public.news_posts enable row level security;
 alter table public.media_items enable row level security;
@@ -408,6 +453,34 @@ for delete
 to authenticated
 using (true);
 
+drop policy if exists "Public visitors can insert sponsor inquiries" on public.sponsor_inquiries;
+create policy "Public visitors can insert sponsor inquiries"
+on public.sponsor_inquiries
+for insert
+with check (true);
+
+drop policy if exists "Authenticated users can read sponsor inquiries" on public.sponsor_inquiries;
+create policy "Authenticated users can read sponsor inquiries"
+on public.sponsor_inquiries
+for select
+to authenticated
+using (true);
+
+drop policy if exists "Authenticated users can update sponsor inquiries" on public.sponsor_inquiries;
+create policy "Authenticated users can update sponsor inquiries"
+on public.sponsor_inquiries
+for update
+to authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Authenticated users can delete sponsor inquiries" on public.sponsor_inquiries;
+create policy "Authenticated users can delete sponsor inquiries"
+on public.sponsor_inquiries
+for delete
+to authenticated
+using (true);
+
 drop policy if exists "Public visitors can read site pages" on public.site_pages;
 create policy "Public visitors can read site pages"
 on public.site_pages
@@ -542,6 +615,7 @@ returns table (
   bio text,
   hobbies_interests text,
   photo_url text,
+  photo_display_mode text,
   facebook_url text,
   website_url text,
   display_order int,
@@ -566,6 +640,7 @@ as $$
     pp.bio,
     pp.hobbies_interests,
     pp.photo_url,
+    pp.photo_display_mode,
     pp.facebook_url,
     pp.website_url,
     pp.display_order,

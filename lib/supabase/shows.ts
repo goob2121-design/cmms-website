@@ -47,6 +47,29 @@ export async function getPublishedShows() {
   return (data ?? []) as DbShow[];
 }
 
+export async function getNextPublishedShow() {
+  if (!supabase) {
+    return null;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("shows")
+    .select(selectFields)
+    .eq("published", true)
+    .gte("show_date", today)
+    .order("show_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Unable to load next Supabase show:", error.message);
+    return null;
+  }
+
+  return data as DbShow | null;
+}
+
 export async function getPublishedShowBySlug(slug: string) {
   if (!supabase) {
     return null;

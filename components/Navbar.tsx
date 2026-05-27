@@ -22,11 +22,13 @@ export function Navbar({
   showMedia = false,
   showBand = false,
   showTeam = false,
+  nextShowAnnouncement = null,
 }: {
   showNews?: boolean;
   showMedia?: boolean;
   showBand?: boolean;
   showTeam?: boolean;
+  nextShowAnnouncement?: string | null;
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const navItems: { label: string; href: string; Icon: LucideIcon }[] = [
@@ -71,7 +73,7 @@ export function Navbar({
           : "border-white/10 bg-[#080604]/24 backdrop-blur-sm"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:gap-5 xl:gap-7">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:gap-4 xl:gap-5">
         <Link
           href="/"
           className="flex shrink-0 items-center justify-center gap-2.5 lg:justify-start"
@@ -91,7 +93,7 @@ export function Navbar({
         </Link>
 
         <nav
-          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm font-semibold text-[#f7ead7] lg:min-w-0 lg:flex-1 lg:flex-nowrap lg:gap-x-3 xl:gap-x-4"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm font-semibold text-[#f7ead7] lg:min-w-0 lg:flex-1 lg:flex-nowrap lg:gap-x-2.5 xl:gap-x-3"
           aria-label="Primary navigation"
         >
           {navItems.map(({ href, label, Icon }) => {
@@ -127,18 +129,30 @@ export function Navbar({
           })}
         </nav>
 
+        <div className="flex shrink-0 items-center justify-center gap-2 lg:ml-auto">
+          <Link
+            href="/show-dates"
+            className="group inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#d7a84f] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+          >
+            <Ticket
+              aria-hidden="true"
+              className="h-4 w-4 transition duration-200 group-hover:-rotate-6"
+              strokeWidth={2}
+            />
+            <span>Tickets</span>
+          </Link>
+        </div>
+      </div>
+      {nextShowAnnouncement ? (
         <Link
           href="/show-dates"
-          className="group inline-flex shrink-0 items-center justify-center gap-1.5 self-center whitespace-nowrap rounded-full bg-[#d7a84f] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e] lg:ml-auto lg:self-auto"
+          className="block border-y border-[#d7a84f]/18 bg-black/34 px-4 py-2 text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[#f4d28b] transition hover:bg-black/45 hover:text-[#fff7ea] sm:text-xs"
         >
-          <Ticket
-            aria-hidden="true"
-            className="h-4 w-4 transition duration-200 group-hover:-rotate-6"
-            strokeWidth={2}
-          />
-          <span>Tickets</span>
+          <span className="mx-auto block max-w-7xl truncate">
+            {nextShowAnnouncement}
+          </span>
         </Link>
-      </div>
+      ) : null}
     </header>
   );
 }

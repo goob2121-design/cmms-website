@@ -12,6 +12,7 @@ const routes = [
   { path: "/news", priority: 0.65 },
   { path: "/media", priority: 0.65 },
   { path: "/sponsors", priority: 0.7 },
+  { path: "/become-a-sponsor", priority: 0.68 },
   { path: "/contact", priority: 0.7 },
   { path: "/mailing-list", priority: 0.65 },
 ];

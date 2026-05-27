@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { getSponsorLevelRank, SponsorLevelBadge } from "@/lib/sponsorLevels";
 import { getActiveSponsors } from "@/lib/supabase/sponsors";
@@ -35,6 +36,12 @@ export default async function SponsorsPage() {
           keep live bluegrass, gospel, and traditional mountain music thriving
           in Cumberland Gap.
         </p>
+        <Link
+          href="/become-a-sponsor"
+          className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+        >
+          Become a Sponsor
+        </Link>
       </section>
 
       <section className="mt-10">

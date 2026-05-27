@@ -1,6 +1,7 @@
 import { supabase } from "./client";
 
 export type ProfileType = "band" | "team";
+export type PhotoDisplayMode = "show" | "hide" | "coming_soon";
 
 export type PeopleProfile = {
   id: string;
@@ -12,6 +13,7 @@ export type PeopleProfile = {
   bio: string | null;
   hobbies_interests: string | null;
   photo_url: string | null;
+  photo_display_mode: PhotoDisplayMode | null;
   facebook_url: string | null;
   website_url: string | null;
   display_order: number | null;
