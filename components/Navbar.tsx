@@ -2,11 +2,13 @@
 
 import {
   CalendarDays,
+  X,
   Handshake,
   Home,
   Images,
   Link2,
   Mail,
+  Menu,
   Music,
   Newspaper,
   Users,
@@ -31,6 +33,7 @@ export function Navbar({
   nextShowAnnouncement?: string | null;
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems: { label: string; href: string; Icon: LucideIcon }[] = [
     { label: "Home", href: "/", Icon: Home },
     { label: "Show Dates", href: "/show-dates", Icon: CalendarDays },
@@ -73,10 +76,11 @@ export function Navbar({
           : "border-white/10 bg-[#080604]/24 backdrop-blur-sm"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:gap-4 xl:gap-5">
+      <div className="mx-auto flex max-w-7xl flex-nowrap items-center gap-3 px-4 py-3 sm:px-8 lg:gap-4 lg:py-4 xl:gap-5">
         <Link
           href="/"
-          className="flex shrink-0 items-center justify-center gap-2.5 lg:justify-start"
+          className="flex min-w-0 shrink-0 items-center gap-2.5"
+          onClick={() => setIsMenuOpen(false)}
         >
           <Image
             src="/cmms-round-logo.png"
@@ -84,22 +88,56 @@ export function Navbar({
             width={58}
             height={58}
             priority
-            className="h-12 w-12 rounded-full object-contain shadow-[0_0_30px_rgba(215,168,79,0.22)]"
+            className="h-10 w-10 rounded-full object-contain shadow-[0_0_30px_rgba(215,168,79,0.22)] sm:h-12 sm:w-12"
           />
-          <span className="text-left text-sm font-semibold uppercase tracking-[0.2em] text-[#f4d28b]">
+          <span className="hidden text-left text-sm font-semibold uppercase tracking-[0.2em] text-[#f4d28b] sm:block">
             Cumberland
             <span className="block text-[#fff7ea]">Mountain Music</span>
           </span>
         </Link>
 
+        <div className="ml-auto flex shrink-0 items-center gap-2 lg:hidden">
+          <Link
+            href="/show-dates"
+            onClick={() => setIsMenuOpen(false)}
+            className="group inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#d7a84f] px-3 py-2 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:bg-[#f1c86e] sm:px-4 sm:text-xs"
+          >
+            <Ticket
+              aria-hidden="true"
+              className="h-3.5 w-3.5 transition duration-200 group-hover:-rotate-6 sm:h-4 sm:w-4"
+              strokeWidth={2}
+            />
+            <span>Tickets</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((current) => !current)}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-primary-navigation"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d7a84f]/35 bg-black/24 text-[#f4d28b] transition hover:border-[#d7a84f]/65 hover:text-white"
+          >
+            {isMenuOpen ? (
+              <X aria-hidden="true" className="h-5 w-5" strokeWidth={1.9} />
+            ) : (
+              <Menu aria-hidden="true" className="h-5 w-5" strokeWidth={1.9} />
+            )}
+            <span className="sr-only">
+              {isMenuOpen ? "Close navigation" : "Open navigation"}
+            </span>
+          </button>
+        </div>
+
         <nav
-          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm font-semibold text-[#f7ead7] lg:min-w-0 lg:flex-1 lg:flex-nowrap lg:gap-x-2.5 xl:gap-x-3"
+          id="mobile-primary-navigation"
+          className={`w-full flex-col gap-3 border-t border-[#d7a84f]/14 pt-3 text-sm font-semibold text-[#f7ead7] lg:flex lg:w-auto lg:min-w-0 lg:flex-1 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-center lg:gap-x-2.5 lg:border-0 lg:pt-0 xl:gap-x-3 ${
+            isMenuOpen ? "flex" : "hidden"
+          }`}
           aria-label="Primary navigation"
         >
           {navItems.map(({ href, label, Icon }) => {
             const isExternal = href.startsWith("http");
             const className =
-              "group inline-flex items-center gap-1 whitespace-nowrap transition hover:text-[#f4d28b] xl:gap-1.5";
+              "group inline-flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 transition hover:text-[#f4d28b] lg:gap-1 lg:px-0 lg:py-0 xl:gap-1.5";
             const content = (
               <>
                 <Icon
@@ -118,18 +156,24 @@ export function Navbar({
                 target="_blank"
                 rel="noopener noreferrer"
                 className={className}
+                onClick={() => setIsMenuOpen(false)}
               >
                 {content}
               </a>
             ) : (
-              <Link key={href} href={href} className={className}>
+              <Link
+                key={href}
+                href={href}
+                className={className}
+                onClick={() => setIsMenuOpen(false)}
+              >
                 {content}
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center justify-center gap-2 lg:ml-auto">
+        <div className="hidden shrink-0 items-center justify-center gap-2 lg:ml-auto lg:flex">
           <Link
             href="/show-dates"
             className="group inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#d7a84f] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_12px_28px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
