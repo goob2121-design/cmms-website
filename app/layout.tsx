@@ -116,6 +116,12 @@ export default async function RootLayout({
               >
                 Become a Sponsor
               </Link>
+              <Link
+                href="/snack-shop"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
+              >
+                Snack Shop
+              </Link>
             </div>
             <Link
               href="/admin"

@@ -9,6 +9,7 @@ import {
   validateImageFile,
 } from "@/lib/imageUploads";
 import { createShowSlug, sanitizeSlugInput, slugify, slugPattern } from "@/lib/slug";
+import { getSponsorLevelRank } from "@/lib/sponsorLevels";
 import { supabase } from "@/lib/supabase/client";
 import type { DbShow } from "@/lib/supabase/shows";
 import type { DbSponsor } from "@/lib/supabase/sponsors";
@@ -235,6 +236,7 @@ export default function AdminShowsPage() {
       .from("sponsors")
       .select("*")
       .eq("active", true)
+      .order("display_order", { ascending: true })
       .order("name", { ascending: true });
 
     if (error) {
@@ -242,7 +244,15 @@ export default function AdminShowsPage() {
       return;
     }
 
-    setSponsors((data ?? []) as DbSponsor[]);
+    setSponsors(
+      ((data ?? []) as DbSponsor[]).sort(
+        (a, b) =>
+          (a.display_order ?? 0) - (b.display_order ?? 0) ||
+          getSponsorLevelRank(a.sponsor_level) -
+            getSponsorLevelRank(b.sponsor_level) ||
+          a.name.localeCompare(b.name),
+      ),
+    );
   }
 
   async function loadSponsorAssignments(showId: string) {
@@ -777,7 +787,8 @@ export default function AdminShowsPage() {
             </h3>
             <p className="mt-2 text-sm leading-6 text-[#d9c8aa]">
               Select active sponsors from the sponsor library. Save the show to
-              update assignments.
+              update assignments. Lower order numbers appear first for this
+              show.
             </p>
 
             {sponsors.length === 0 ? (
@@ -818,6 +829,9 @@ export default function AdminShowsPage() {
                                 {sponsor.sponsor_level}
                               </span>
                             ) : null}
+                            <span className="ml-2 text-sm text-[#bda987]">
+                              General order {sponsor.display_order ?? 0}
+                            </span>
                           </span>
                         </label>
                         <label className="flex items-center gap-2 text-sm text-[#d9c8aa]">

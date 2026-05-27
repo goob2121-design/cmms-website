@@ -9,6 +9,7 @@ values
   ('show-promos', 'show-promos', true),
   ('media-images', 'media-images', true),
   ('people-photos', 'people-photos', true),
+  ('snack-shop', 'snack-shop', true),
   ('people-submissions', 'people-submissions', true)
 on conflict (id) do update set
   public = excluded.public;
@@ -74,10 +75,13 @@ create table if not exists public.sponsors (
   contact_email text,
   contact_phone text,
   notes text,
+  display_order int default 0,
   active boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+alter table public.sponsors add column if not exists display_order int default 0;
 
 create table if not exists public.show_sponsors (
   id uuid primary key default gen_random_uuid(),
@@ -100,6 +104,25 @@ create table if not exists public.sponsor_inquiries (
   status text default 'new' check (status in ('new', 'contacted', 'follow-up', 'closed')),
   created_at timestamptz default now()
 );
+
+create table if not exists public.snack_shop_settings (
+  id uuid primary key default gen_random_uuid(),
+  menu_image_url text,
+  menu_pdf_url text,
+  hot_food_image_url text,
+  desserts_image_url text,
+  drinks_image_url text,
+  intermission_image_url text,
+  special_text text,
+  mamaw_message text,
+  active boolean default true,
+  updated_at timestamptz default now()
+);
+
+alter table public.snack_shop_settings add column if not exists hot_food_image_url text;
+alter table public.snack_shop_settings add column if not exists desserts_image_url text;
+alter table public.snack_shop_settings add column if not exists drinks_image_url text;
+alter table public.snack_shop_settings add column if not exists intermission_image_url text;
 
 do $$
 begin
@@ -289,6 +312,7 @@ $$;
 alter table public.sponsors enable row level security;
 alter table public.show_sponsors enable row level security;
 alter table public.sponsor_inquiries enable row level security;
+alter table public.snack_shop_settings enable row level security;
 alter table public.site_pages enable row level security;
 alter table public.news_posts enable row level security;
 alter table public.media_items enable row level security;
@@ -301,29 +325,29 @@ drop policy if exists "Public visitors can read CMMS public images" on storage.o
 create policy "Public visitors can read CMMS public images"
 on storage.objects
 for select
-using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
+using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos', 'snack-shop'));
 
 drop policy if exists "Authenticated users can upload CMMS public images" on storage.objects;
 create policy "Authenticated users can upload CMMS public images"
 on storage.objects
 for insert
 to authenticated
-with check (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
+with check (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos', 'snack-shop'));
 
 drop policy if exists "Authenticated users can update CMMS public images" on storage.objects;
 create policy "Authenticated users can update CMMS public images"
 on storage.objects
 for update
 to authenticated
-using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'))
-with check (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
+using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos', 'snack-shop'))
+with check (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos', 'snack-shop'));
 
 drop policy if exists "Authenticated users can delete CMMS public images" on storage.objects;
 create policy "Authenticated users can delete CMMS public images"
 on storage.objects
 for delete
 to authenticated
-using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos'));
+using (bucket_id in ('sponsor-logos', 'show-promos', 'media-images', 'people-photos', 'snack-shop'));
 
 drop policy if exists "Public visitors can read people submission photos" on storage.objects;
 create policy "Public visitors can read people submission photos"
@@ -480,6 +504,20 @@ on public.sponsor_inquiries
 for delete
 to authenticated
 using (true);
+
+drop policy if exists "Public visitors can read snack shop settings" on public.snack_shop_settings;
+create policy "Public visitors can read snack shop settings"
+on public.snack_shop_settings
+for select
+using (true);
+
+drop policy if exists "Authenticated users can manage snack shop settings" on public.snack_shop_settings;
+create policy "Authenticated users can manage snack shop settings"
+on public.snack_shop_settings
+for all
+to authenticated
+using (true)
+with check (true);
 
 drop policy if exists "Public visitors can read site pages" on public.site_pages;
 create policy "Public visitors can read site pages"
@@ -713,6 +751,12 @@ before update on public.site_settings
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_snack_shop_settings_updated_at on public.snack_shop_settings;
+create trigger set_snack_shop_settings_updated_at
+before update on public.snack_shop_settings
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists set_people_profiles_updated_at on public.people_profiles;
 create trigger set_people_profiles_updated_at
 before update on public.people_profiles
@@ -747,6 +791,23 @@ values
   ('show_meet_the_band', 'false'),
   ('show_meet_the_team', 'false')
 on conflict (setting_key) do nothing;
+
+insert into public.snack_shop_settings (
+  menu_image_url,
+  menu_pdf_url,
+  special_text,
+  mamaw_message,
+  active
+)
+select
+  null,
+  null,
+  null,
+  'Yes, Mamaw probably WILL ask if you want extra butter.',
+  true
+where not exists (
+  select 1 from public.snack_shop_settings
+);
 
 insert into public.site_pages (page_key, title, subtitle, body, image_url)
 values

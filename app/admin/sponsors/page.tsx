@@ -9,7 +9,7 @@ import {
   validateImageFile,
 } from "@/lib/imageUploads";
 import { sanitizeSlugInput, slugify, slugPattern } from "@/lib/slug";
-import { sponsorLevels } from "@/lib/sponsorLevels";
+import { getSponsorLevelRank, sponsorLevels } from "@/lib/sponsorLevels";
 import { supabase } from "@/lib/supabase/client";
 import type { DbSponsor } from "@/lib/supabase/sponsors";
 
@@ -25,6 +25,7 @@ type SponsorForm = {
   contact_email: string;
   contact_phone: string;
   notes: string;
+  display_order: string;
   active: boolean;
 };
 
@@ -39,6 +40,7 @@ const emptyForm: SponsorForm = {
   contact_email: "",
   contact_phone: "",
   notes: "",
+  display_order: "0",
   active: true,
 };
 
@@ -60,6 +62,12 @@ const textFields: Array<{
   { name: "contact_name", label: "Contact Name" },
   { name: "contact_email", label: "Contact Email", type: "email" },
   { name: "contact_phone", label: "Contact Phone" },
+  {
+    name: "display_order",
+    label: "Display Order",
+    type: "number",
+    placeholder: "Lower numbers appear first.",
+  },
 ];
 
 function cleanValue(value: string) {
@@ -80,6 +88,7 @@ function toForm(sponsor: DbSponsor): SponsorForm {
     contact_email: sponsor.contact_email ?? "",
     contact_phone: sponsor.contact_phone ?? "",
     notes: sponsor.notes ?? "",
+    display_order: String(sponsor.display_order ?? 0),
     active: Boolean(sponsor.active),
   };
 }
@@ -98,6 +107,7 @@ function toPayload(form: SponsorForm) {
     contact_email: cleanValue(form.contact_email),
     contact_phone: cleanValue(form.contact_phone),
     notes: cleanValue(form.notes),
+    display_order: Number.parseInt(form.display_order, 10) || 0,
     active: form.active,
   };
 }
@@ -117,7 +127,14 @@ export default function AdminSponsorsPage() {
   const isEditing = Boolean(form.id);
 
   const sortedSponsors = useMemo(
-    () => [...sponsors].sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      [...sponsors].sort(
+        (a, b) =>
+          (a.display_order ?? 0) - (b.display_order ?? 0) ||
+          getSponsorLevelRank(a.sponsor_level) -
+            getSponsorLevelRank(b.sponsor_level) ||
+          a.name.localeCompare(b.name),
+      ),
     [sponsors],
   );
 
@@ -152,6 +169,7 @@ export default function AdminSponsorsPage() {
     const { data, error } = await supabase
       .from("sponsors")
       .select("*")
+      .order("display_order", { ascending: true })
       .order("name", { ascending: true });
 
     setIsLoadingSponsors(false);
@@ -429,7 +447,8 @@ export default function AdminSponsorsPage() {
                     <h3 className="font-semibold text-white">{sponsor.name}</h3>
                     <p className="mt-1 text-sm text-[#d9c8aa]">
                       {sponsor.sponsor_level ?? "Sponsor"} /{" "}
-                      {sponsor.slug ?? "no-slug"}
+                      {sponsor.slug ?? "no-slug"} / Order{" "}
+                      {sponsor.display_order ?? 0}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full border border-[#d7a84f]/20 px-3 py-1 text-xs uppercase tracking-[0.14em] text-[#f4d28b]">
@@ -501,6 +520,11 @@ export default function AdminSponsorsPage() {
                   pattern={field.name === "slug" ? "[a-z0-9-]+" : undefined}
                   className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25"
                 />
+                {field.name === "display_order" ? (
+                  <span className="mt-2 block text-sm text-[#bda987]">
+                    Lower numbers appear first.
+                  </span>
+                ) : null}
               </label>
             ))}
             <label className="block">

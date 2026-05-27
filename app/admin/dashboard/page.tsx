@@ -27,6 +27,11 @@ const adminAreas = [
     description: "Review sponsorship interest form submissions.",
   },
   {
+    name: "Snack Shop",
+    href: "/admin/snack-shop",
+    description: "Manage Mamaw Gerald's concessions menu and monthly notes.",
+  },
+  {
     name: "People",
     href: "/admin/people",
     description: "Manage Meet the Band and Meet the Team profiles.",

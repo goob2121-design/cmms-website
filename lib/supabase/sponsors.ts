@@ -1,4 +1,5 @@
 import { supabase } from "./client";
+import { getSponsorLevelRank } from "@/lib/sponsorLevels";
 
 export type DbSponsor = {
   id: string;
@@ -12,6 +13,7 @@ export type DbSponsor = {
   contact_email: string | null;
   contact_phone: string | null;
   notes: string | null;
+  display_order: number | null;
   active: boolean | null;
   created_at: string | null;
   updated_at: string | null;
@@ -26,6 +28,7 @@ export type PublicSponsor = Pick<
   | "website_url"
   | "description"
   | "sponsor_level"
+  | "display_order"
   | "active"
 >;
 
@@ -36,7 +39,15 @@ type ShowSponsorRow = {
 };
 
 const publicSponsorFields =
-  "id,name,slug,logo_url,website_url,description,sponsor_level,active";
+  "id,name,slug,logo_url,website_url,description,sponsor_level,display_order,active";
+
+function compareSponsors(a: PublicSponsor, b: PublicSponsor) {
+  return (
+    (a.display_order ?? 0) - (b.display_order ?? 0) ||
+    getSponsorLevelRank(a.sponsor_level) - getSponsorLevelRank(b.sponsor_level) ||
+    a.name.localeCompare(b.name)
+  );
+}
 
 export async function getActiveSponsors() {
   if (!supabase) {
@@ -47,6 +58,7 @@ export async function getActiveSponsors() {
     .from("sponsors")
     .select(publicSponsorFields)
     .eq("active", true)
+    .order("display_order", { ascending: true })
     .order("name", { ascending: true });
 
   if (error) {
@@ -54,7 +66,7 @@ export async function getActiveSponsors() {
     return [];
   }
 
-  return (data ?? []) as PublicSponsor[];
+  return ((data ?? []) as PublicSponsor[]).sort(compareSponsors);
 }
 
 export async function getActiveSponsorsForShow(showId: string) {
@@ -96,6 +108,18 @@ export async function getActiveSponsorsForShow(showId: string) {
   );
 
   return rows
-    .map((row) => sponsorsById.get(row.sponsor_id))
-    .filter((sponsor): sponsor is PublicSponsor => Boolean(sponsor));
+    .map((row) => ({
+      assignmentOrder: row.display_order ?? 0,
+      sponsor: sponsorsById.get(row.sponsor_id),
+    }))
+    .filter(
+      (item): item is { assignmentOrder: number; sponsor: PublicSponsor } =>
+        Boolean(item.sponsor),
+    )
+    .sort(
+      (a, b) =>
+        a.assignmentOrder - b.assignmentOrder ||
+        compareSponsors(a.sponsor, b.sponsor),
+    )
+    .map((item) => item.sponsor);
 }

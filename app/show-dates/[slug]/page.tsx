@@ -231,6 +231,26 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
         </article>
       </section>
 
+      <section className="mt-7 rounded-lg border border-[#d7a84f]/20 bg-[linear-gradient(135deg,rgba(31,21,10,0.88),rgba(10,7,4,0.96))] p-5 text-center shadow-[0_18px_55px_rgba(0,0,0,0.22)] sm:p-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d7a84f]">
+          Concessions
+        </p>
+        <h2 className="mt-3 text-2xl font-semibold text-white">
+          Visit Mamaw Gerald&apos;s Snack Shop during the show!
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl leading-7 text-[#d9c8aa]">
+          Grab hot dogs, pizza, homemade fried pies, fresh coffee, cold drinks,
+          and intermission favorites while helping support the Cumberland
+          Mountain Music Show.
+        </p>
+        <Link
+          href="/snack-shop"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/65 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+        >
+          View Snack Menu
+        </Link>
+      </section>
+
       {sponsors.length > 0 ? (
         <section className="mt-7 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
           <h2 className="text-center text-2xl font-semibold text-white sm:text-3xl">

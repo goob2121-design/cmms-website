@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createPublicPageMetadata } from "@/lib/metadata";
-import { getSponsorLevelRank, SponsorLevelBadge } from "@/lib/sponsorLevels";
+import { SponsorLevelBadge } from "@/lib/sponsorLevels";
 import { getActiveSponsors } from "@/lib/supabase/sponsors";
 
 export const metadata: Metadata = createPublicPageMetadata({
@@ -14,13 +14,7 @@ export const metadata: Metadata = createPublicPageMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function SponsorsPage() {
-  const sponsors = (await getActiveSponsors()).sort((a, b) => {
-    const levelSort =
-      getSponsorLevelRank(a.sponsor_level) -
-      getSponsorLevelRank(b.sponsor_level);
-
-    return levelSort || a.name.localeCompare(b.name);
-  });
+  const sponsors = await getActiveSponsors();
 
   return (
     <main className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-14 pt-40 sm:px-8 lg:pb-20">
