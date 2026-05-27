@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/next";
 import { Navbar } from "@/components/Navbar";
 import {
   defaultDescription,
@@ -131,6 +132,7 @@ export default async function RootLayout({
             </Link>
           </footer>
         </div>
+        <Analytics />
       </body>
     </html>
   );
