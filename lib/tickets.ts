@@ -21,6 +21,6 @@ export function isSquareTicketUrl(ticketUrl?: string | null) {
 
 export function getTicketCheckoutNote(ticketUrl?: string | null) {
   return isSquareTicketUrl(ticketUrl)
-    ? "Secure checkout powered by Square."
+    ? "Secure ticket checkout powered by Square."
     : "Ticket checkout is securely handled through our ticketing partner.";
 }
