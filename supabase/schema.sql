@@ -796,6 +796,13 @@ values
   ('show_meet_the_team', 'false')
 on conflict (setting_key) do nothing;
 
+insert into public.site_settings (setting_key, setting_value)
+values
+  ('meet_the_band_feature_image', '/cartoon-band.jpg'),
+  ('meet_the_band_feature_title', null),
+  ('meet_the_band_feature_subtitle', null)
+on conflict (setting_key) do nothing;
+
 insert into public.snack_shop_settings (
   menu_image_url,
   menu_pdf_url,

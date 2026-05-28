@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OptionalImage } from "@/components/OptionalImage";
 import { PeopleSectionPreview } from "@/components/PeopleSectionPreview";
 import { PersonCard } from "@/components/PersonCard";
 import { createPublicPageMetadata } from "@/lib/metadata";
@@ -27,8 +28,22 @@ export default async function MeetTheBandPage({
 }: MeetTheBandPageProps) {
   const query = await searchParams;
   const isAdminPreview = getPreviewValue(query.preview) === "admin";
-  const showBandSetting = await getSiteSetting("show_meet_the_band");
+  const [
+    showBandSetting,
+    featureImageSetting,
+    featureTitleSetting,
+    featureSubtitleSetting,
+  ] = await Promise.all([
+    getSiteSetting("show_meet_the_band"),
+    getSiteSetting("meet_the_band_feature_image"),
+    getSiteSetting("meet_the_band_feature_title"),
+    getSiteSetting("meet_the_band_feature_subtitle"),
+  ]);
   const showBand = showBandSetting?.setting_value === "true";
+  const featureImage =
+    featureImageSetting?.setting_value?.trim() || "/cartoon-band.jpg";
+  const featureTitle = featureTitleSetting?.setting_value?.trim();
+  const featureSubtitle = featureSubtitleSetting?.setting_value?.trim();
 
   if (!showBand) {
     if (isAdminPreview) {
@@ -64,7 +79,7 @@ export default async function MeetTheBandPage({
   const members = await getPublishedPeopleProfiles("band");
 
   return (
-    <main className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-14 pt-40 sm:px-8 lg:pb-20">
+    <main className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-14 pt-40 sm:px-8 lg:pb-20">
       <section className="mx-auto max-w-3xl text-center">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">
           Cumberland Mountain Music
@@ -78,13 +93,35 @@ export default async function MeetTheBandPage({
         </p>
       </section>
 
+      <section className="mx-auto mt-8 max-w-4xl">
+        {featureTitle || featureSubtitle ? (
+          <div className="mb-4 text-center">
+            {featureTitle ? (
+              <h2 className="text-2xl font-semibold text-white">
+                {featureTitle}
+              </h2>
+            ) : null}
+            {featureSubtitle ? (
+              <p className="mt-2 text-[#d9c8aa]">{featureSubtitle}</p>
+            ) : null}
+          </div>
+        ) : null}
+        <OptionalImage
+          src={featureImage}
+          alt="Cumberland Mountain Music band illustration"
+          className="h-auto w-full object-contain"
+          wrapperClassName="overflow-hidden rounded-lg border border-[#d7a84f]/24 bg-black/25 shadow-[0_22px_70px_rgba(0,0,0,0.3)]"
+        />
+      </section>
+
       {members.length > 0 ? (
-        <section className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {members.map((member) => (
             <PersonCard
               key={member.id}
               member={member}
               profileBasePath="/meet-the-band"
+              variant="compact"
             />
           ))}
         </section>
