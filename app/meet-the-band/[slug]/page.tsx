@@ -72,12 +72,12 @@ export default async function BandMemberPage({
   const query = await searchParams;
   const reviewToken = getReviewToken(query.review);
   const publishedMember = await getPublishedPeopleProfileBySlug("band", slug);
-  const reviewMember =
-    publishedMember || !reviewToken
-      ? null
-      : await getPeopleProfileForReview("band", slug, reviewToken);
+  const reviewMember = reviewToken
+    ? await getPeopleProfileForReview("band", slug, reviewToken)
+    : null;
   const member = publishedMember ?? reviewMember;
-  const isReviewPreview = !publishedMember && Boolean(reviewMember);
+  const hasValidReviewToken = Boolean(reviewMember);
+  const isReviewPreview = !publishedMember && hasValidReviewToken;
 
   if (!member) {
     notFound();
@@ -157,7 +157,7 @@ export default async function BandMemberPage({
         </article>
       </section>
 
-      {isReviewPreview && reviewToken ? (
+      {hasValidReviewToken && reviewToken ? (
         <PeopleSubmissionForm profile={member} reviewToken={reviewToken} />
       ) : null}
     </main>
