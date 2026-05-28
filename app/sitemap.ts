@@ -14,6 +14,7 @@ const routes = [
   { path: "/sponsors", priority: 0.7 },
   { path: "/become-a-sponsor", priority: 0.68 },
   { path: "/snack-shop", priority: 0.68 },
+  { path: "/in-memory", priority: 0.62 },
   { path: "/contact", priority: 0.7 },
   { path: "/mailing-list", priority: 0.65 },
 ];

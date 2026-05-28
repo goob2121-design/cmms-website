@@ -94,8 +94,7 @@ export default async function RootLayout({
 
           <footer className="relative z-10 border-t border-[#d7a84f]/15 px-6 py-8 text-center text-sm text-[#bda987] sm:px-8">
             <p>
-              Cumberland Mountain Music, Cumberland Gap, Tennessee. Home of The
-              Cumberland Mountain Music Show.
+              Cumberland Mountain Music, Cumberland Gap, Tennessee.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
               <Link
@@ -121,6 +120,12 @@ export default async function RootLayout({
                 className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
               >
                 Snack Shop
+              </Link>
+              <Link
+                href="/in-memory"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
+              >
+                In Memory
               </Link>
             </div>
             <Link

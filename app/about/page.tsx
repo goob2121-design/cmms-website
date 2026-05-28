@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { getSitePage } from "@/lib/supabase/cms";
 
@@ -62,6 +63,21 @@ export default async function AboutPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="mt-10 rounded-lg border border-[#d7a84f]/18 bg-[#120d08]/80 p-6 text-center shadow-[0_18px_55px_rgba(0,0,0,0.22)]">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d7a84f]">
+          Honoring The Story
+        </p>
+        <h2 className="mt-3 text-2xl font-semibold text-white">
+          Remembering those who helped shape the show.
+        </h2>
+        <Link
+          href="/in-memory"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/60 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+        >
+          View our In Memory tribute
+        </Link>
       </section>
     </main>
   );
