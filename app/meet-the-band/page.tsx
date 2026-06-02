@@ -122,6 +122,7 @@ export default async function MeetTheBandPage({
               member={member}
               profileBasePath="/meet-the-band"
               variant="compact"
+              imageLayout="landscape"
             />
           ))}
         </section>

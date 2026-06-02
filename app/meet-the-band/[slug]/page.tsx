@@ -47,8 +47,8 @@ function ProfileImage({ member }: { member: PeopleProfile }) {
   if (member.photo_display_mode === "hide") return null;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[#d7a84f]/25 bg-[linear-gradient(135deg,rgba(215,168,79,0.18),rgba(0,0,0,0.34))] shadow-[0_24px_80px_rgba(0,0,0,0.34)]">
-      <div className="aspect-[4/5]">
+    <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-lg border border-[#d7a84f]/25 bg-black shadow-[0_24px_80px_rgba(0,0,0,0.34)]">
+      <div className="aspect-[16/10] sm:aspect-[16/8]">
         <ProfilePhoto
           src={member.photo_url}
           alt={member.name}
@@ -57,7 +57,7 @@ function ProfileImage({ member }: { member: PeopleProfile }) {
               ? "coming_soon"
               : "show"
           }
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain object-top"
         />
       </div>
     </div>
@@ -91,10 +91,10 @@ export default async function BandMemberPage({
         </section>
       ) : null}
 
-      <section className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+      <section className="space-y-8">
         <ProfileImage member={member} />
 
-        <article>
+        <article className="mx-auto max-w-4xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">
             Meet the Band
           </p>
@@ -118,7 +118,7 @@ export default async function BandMemberPage({
             </p>
           )}
           {member.hobbies_interests ? (
-            <div className="mt-6 rounded-lg border border-[#d7a84f]/20 bg-black/20 p-4 text-[#e7d8c2]">
+            <div className="mt-6 rounded-lg border border-[#d7a84f]/20 bg-black/20 p-4 text-left text-[#e7d8c2]">
               <p className="font-semibold text-[#f4d28b]">
                 Hobbies &amp; Interests:
               </p>
@@ -126,7 +126,7 @@ export default async function BandMemberPage({
             </div>
           ) : null}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             {member.facebook_url ? (
               <a
                 href={member.facebook_url}

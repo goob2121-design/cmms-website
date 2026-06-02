@@ -6,21 +6,28 @@ type PersonCardProps = {
   member: PeopleProfile;
   profileBasePath: "/meet-the-band" | "/meet-the-team";
   variant?: "default" | "compact";
+  imageLayout?: "portrait" | "landscape";
 };
 
 export function PersonCard({
   member,
   profileBasePath,
   variant = "default",
+  imageLayout = "portrait",
 }: PersonCardProps) {
   const isCompact = variant === "compact";
+  const isLandscape = imageLayout === "landscape";
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 shadow-[0_18px_55px_rgba(0,0,0,0.26)] transition duration-200 hover:-translate-y-1 hover:border-[#d7a84f]/45 hover:shadow-[0_22px_65px_rgba(0,0,0,0.34)]">
       {member.photo_display_mode === "hide" ? null : (
         <div
           className={`person-card-media w-full overflow-hidden bg-[linear-gradient(135deg,rgba(215,168,79,0.18),rgba(0,0,0,0.34))] ${
-            isCompact ? "h-44 sm:h-48 lg:h-40 xl:h-44" : "h-[260px]"
+            isLandscape
+              ? "aspect-[5/3] bg-black"
+              : isCompact
+                ? "h-44 sm:h-48 lg:h-40 xl:h-44"
+                : "h-[260px]"
           }`}
         >
           <ProfilePhoto
@@ -31,7 +38,11 @@ export function PersonCard({
                 ? "coming_soon"
                 : "show"
             }
-            className="h-full w-full object-cover"
+            className={`h-full w-full ${
+              isLandscape
+                ? "object-contain object-top"
+                : "object-cover"
+            }`}
           />
         </div>
       )}
