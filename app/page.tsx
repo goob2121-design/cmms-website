@@ -130,16 +130,26 @@ export default async function Home() {
 
   return (
     <main className="relative z-10">
-      <section className="relative min-h-[78svh] overflow-hidden">
+      <section className="relative isolate min-h-[78svh] overflow-hidden">
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/cmms-header.png')" }}
+          className="absolute inset-0 z-0 bg-cover bg-center brightness-[1.16]"
+          style={{ backgroundImage: "url('/cmms-heade-V2.png')" }}
         />
         <HeroFogVideo />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,6,4,0.74),rgba(8,6,4,0.3)_48%,rgba(8,6,4,0.08)),linear-gradient(180deg,rgba(8,6,4,0.28),rgba(8,6,4,0.08)_34%,rgba(8,6,4,0.78)_68%,rgba(8,6,4,1)),radial-gradient(circle_at_50%_28%,rgba(215,168,79,0.12),transparent_42%)]" />
+        <div className="absolute inset-0 z-[1] bg-[linear-gradient(90deg,rgba(8,6,4,0.6),rgba(8,6,4,0.2)_48%,rgba(8,6,4,0.04)),linear-gradient(180deg,rgba(8,6,4,0.18),rgba(8,6,4,0.05)_34%,rgba(8,6,4,0.6)_68%,rgba(8,6,4,0.9)),radial-gradient(circle_at_50%_28%,rgba(215,168,79,0.12),transparent_42%)]" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[2]"
+        >
+          <img
+            src="/cmms-header-fg.png?v=2"
+            alt=""
+            className="h-full w-full object-cover object-center brightness-[0.88] drop-shadow-[0_0_18px_rgba(8,6,4,0.42)]"
+          />
+        </div>
 
-        <div className="relative flex min-h-[78svh] flex-col pt-[124px] sm:pt-[104px]">
+        <div className="relative z-[3] flex min-h-[78svh] flex-col pt-[124px] sm:pt-[104px]">
           <Ticker
             messages={tickerMessages.map((ticker) => ticker.message)}
             speedSeconds={Number(tickerSpeedSetting?.setting_value ?? 30)}
@@ -153,7 +163,7 @@ export default async function Home() {
                 width={760}
                 height={360}
                 priority
-                className="h-auto w-[min(88vw,620px)] object-contain drop-shadow-[0_18px_42px_rgba(0,0,0,0.72)] sm:w-[min(76vw,680px)]"
+                className="h-auto w-[min(84vw,580px)] object-contain drop-shadow-[0_18px_42px_rgba(0,0,0,0.72)] sm:w-[min(72vw,640px)]"
               />
               <p className="mt-5 text-balance text-xl font-semibold leading-8 text-[#fff7ea] drop-shadow-[0_8px_24px_rgba(0,0,0,0.58)] sm:text-2xl">
                 The #1 Live Music Show in the Tri-State Area
