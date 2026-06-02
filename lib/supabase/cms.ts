@@ -29,6 +29,9 @@ export type NewsPost = {
 
 export type MediaItem = {
   id: string;
+  show_id: string | null;
+  manual_show_title: string | null;
+  manual_show_date: string | null;
   title: string;
   media_type: "photo" | "video";
   image_url: string | null;
@@ -169,6 +172,27 @@ export async function getPublishedMediaItems() {
 
   if (error) {
     console.warn("Unable to load media items:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as MediaItem[];
+}
+
+export async function getPublishedMediaItemsForShow(showId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("media_items")
+    .select("*")
+    .eq("published", true)
+    .eq("show_id", showId)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.warn("Unable to load show media items:", error.message);
     return [];
   }
 

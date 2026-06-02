@@ -178,6 +178,9 @@ create table if not exists public.news_posts (
 
 create table if not exists public.media_items (
   id uuid primary key default gen_random_uuid(),
+  show_id uuid references public.shows(id) on delete set null,
+  manual_show_title text,
+  manual_show_date date,
   title text not null,
   media_type text not null check (media_type in ('photo', 'video')),
   image_url text,
@@ -188,6 +191,10 @@ create table if not exists public.media_items (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+alter table public.media_items add column if not exists show_id uuid references public.shows(id) on delete set null;
+alter table public.media_items add column if not exists manual_show_title text;
+alter table public.media_items add column if not exists manual_show_date date;
 
 create table if not exists public.ticker_messages (
   id uuid primary key default gen_random_uuid(),

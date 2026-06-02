@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MediaCard } from "@/components/MediaCard";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { SponsorLevelBadge } from "@/lib/sponsorLevels";
+import { getPublishedMediaItemsForShow } from "@/lib/supabase/cms";
 import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
 import { getPublishedShowBySlug } from "@/lib/supabase/shows";
 import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
@@ -99,7 +101,10 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
     notFound();
   }
 
-  const sponsors = await getActiveSponsorsForShow(show.id);
+  const [sponsors, mediaItems] = await Promise.all([
+    getActiveSponsorsForShow(show.id),
+    getPublishedMediaItemsForShow(show.id),
+  ]);
   const ticketsAvailable = isTicketsAvailable(show.tickets_available);
 
   return (
@@ -238,6 +243,32 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
           ) : null}
         </article>
       </section>
+
+      {mediaItems.length > 0 ? (
+        <section className="mt-7 rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.24)] sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d7a84f]">
+                Media
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
+                Photos & Videos From This Show
+              </h2>
+            </div>
+            <Link
+              href="/media"
+              className="text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b] transition hover:text-white"
+            >
+              View Gallery
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {mediaItems.slice(0, 6).map((item) => (
+              <MediaCard key={item.id} item={item} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mt-7 rounded-lg border border-[#d7a84f]/20 bg-[linear-gradient(135deg,rgba(31,21,10,0.88),rgba(10,7,4,0.96))] p-5 text-center shadow-[0_18px_55px_rgba(0,0,0,0.22)] sm:p-6">
         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d7a84f]">

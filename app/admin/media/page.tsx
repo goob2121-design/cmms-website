@@ -7,9 +7,13 @@ import { useRouter } from "next/navigation";
 import { createStorageFileName, validateImageFile } from "@/lib/imageUploads";
 import { supabase } from "@/lib/supabase/client";
 import type { MediaItem } from "@/lib/supabase/cms";
+import type { DbShow } from "@/lib/supabase/shows";
 
 type MediaForm = {
   id?: string;
+  show_id: string;
+  manual_show_title: string;
+  manual_show_date: string;
   title: string;
   media_type: "photo" | "video";
   image_url: string;
@@ -20,6 +24,9 @@ type MediaForm = {
 };
 
 const emptyForm: MediaForm = {
+  show_id: "",
+  manual_show_title: "",
+  manual_show_date: "",
   title: "",
   media_type: "photo",
   image_url: "",
@@ -29,9 +36,14 @@ const emptyForm: MediaForm = {
   published: true,
 };
 
+function getManualShowKey(item: MediaItem) {
+  return `${item.manual_show_date ?? ""}|${item.manual_show_title ?? ""}`;
+}
+
 export default function AdminMediaPage() {
   const router = useRouter();
   const [items, setItems] = useState<MediaItem[]>([]);
+  const [shows, setShows] = useState<DbShow[]>([]);
   const [form, setForm] = useState<MediaForm>(emptyForm);
   const [checking, setChecking] = useState(true);
   const [message, setMessage] = useState("");
@@ -41,6 +53,38 @@ export default function AdminMediaPage() {
     () => [...items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)),
     [items],
   );
+  const showsById = useMemo(
+    () => new Map(shows.map((show) => [show.id, show])),
+    [shows],
+  );
+  const manualShowGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      { title: string; date: string | null; count: number }
+    >();
+
+    items.forEach((item) => {
+      if (!item.manual_show_title) {
+        return;
+      }
+
+      const key = getManualShowKey(item);
+      const group = groups.get(key) ?? {
+        title: item.manual_show_title,
+        date: item.manual_show_date,
+        count: 0,
+      };
+
+      group.count += 1;
+      groups.set(key, group);
+    });
+
+    return [...groups.entries()].sort(
+      ([, a], [, b]) =>
+        (b.date ?? "").localeCompare(a.date ?? "") ||
+        a.title.localeCompare(b.title),
+    );
+  }, [items]);
 
   useEffect(() => {
     async function initialize() {
@@ -55,7 +99,7 @@ export default function AdminMediaPage() {
         return;
       }
       setChecking(false);
-      await loadItems();
+      await Promise.all([loadItems(), loadShows()]);
     }
     initialize();
   }, [router]);
@@ -67,15 +111,38 @@ export default function AdminMediaPage() {
     else setItems((data ?? []) as MediaItem[]);
   }
 
+  async function loadShows() {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("shows")
+      .select("*")
+      .order("show_date", { ascending: false });
+    if (error) setErrorMessage(error.message);
+    else setShows((data ?? []) as DbShow[]);
+  }
+
   function updateField(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = event.target;
     const checked = event.target instanceof HTMLInputElement && event.target.type === "checkbox" ? event.target.checked : false;
     setForm((current) => ({ ...current, [name]: event.target instanceof HTMLInputElement && event.target.type === "checkbox" ? checked : value }));
   }
 
+  function selectManualShow(event: ChangeEvent<HTMLSelectElement>) {
+    const [date, title] = event.target.value.split("|");
+    setForm((current) => ({
+      ...current,
+      show_id: "",
+      manual_show_title: title ?? "",
+      manual_show_date: date ?? "",
+    }));
+  }
+
   function editItem(item: MediaItem) {
     setForm({
       id: item.id,
+      show_id: item.show_id ?? "",
+      manual_show_title: item.manual_show_title ?? "",
+      manual_show_date: item.manual_show_date ?? "",
       title: item.title,
       media_type: item.media_type,
       image_url: item.image_url ?? "",
@@ -120,6 +187,11 @@ export default function AdminMediaPage() {
       caption: form.caption.trim() || null,
       display_order: Number.parseInt(form.display_order, 10) || 0,
       published: form.published,
+      show_id: form.show_id || null,
+      manual_show_title: form.show_id
+        ? null
+        : form.manual_show_title.trim() || null,
+      manual_show_date: form.show_id ? null : form.manual_show_date || null,
     };
     const result = form.id
       ? await supabase.from("media_items").update(payload).eq("id", form.id)
@@ -162,11 +234,14 @@ export default function AdminMediaPage() {
       <section className="mt-8 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <article className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5">
           <h2 className="text-2xl font-semibold text-white">Media Items</h2>
-          <div className="mt-5 space-y-4">{sortedItems.map((item) => <div key={item.id} className="rounded-md border border-[#d7a84f]/15 bg-black/25 p-4"><h3 className="font-semibold text-white">{item.title}</h3><p className="mt-1 text-sm text-[#d9c8aa]">{item.media_type} / {item.published ? "Published" : "Draft"}</p><div className="mt-3 flex flex-wrap gap-2"><button onClick={() => editItem(item)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2]">Edit</button><button onClick={() => toggleItem(item)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2]">{item.published ? "Unpublish" : "Publish"}</button><button onClick={() => deleteItem(item)} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100">Delete</button></div></div>)}</div>
+          <div className="mt-5 space-y-4">{sortedItems.map((item) => <div key={item.id} className="rounded-md border border-[#d7a84f]/15 bg-black/25 p-4"><h3 className="font-semibold text-white">{item.title}</h3><p className="mt-1 text-sm text-[#d9c8aa]">{item.media_type} / {item.published ? "Published" : "Draft"}</p><p className="mt-1 text-sm text-[#bda987]">{item.show_id ? showsById.get(item.show_id)?.title ?? "Show not found" : item.manual_show_title ? `${item.manual_show_title}${item.manual_show_date ? ` / ${item.manual_show_date}` : ""}` : "General / No Specific Show"}</p><div className="mt-3 flex flex-wrap gap-2"><button onClick={() => editItem(item)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2]">Edit</button><button onClick={() => toggleItem(item)} className="rounded-full border border-[#d7a84f]/45 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#f8efe2]">{item.published ? "Unpublish" : "Publish"}</button><button onClick={() => deleteItem(item)} className="rounded-full border border-red-300/35 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-red-100">Delete</button></div></div>)}</div>
         </article>
         <form onSubmit={saveItem} className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-5">
           <h2 className="text-2xl font-semibold text-white">{form.id ? "Edit Media" : "Add Media"}</h2>
           <label className="mt-4 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Title</span><input name="title" value={form.title} onChange={updateField} required className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" /></label>
+          <label className="mt-4 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Show</span><select name="show_id" value={form.show_id} onChange={updateField} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"><option value="">General / No Specific Show</option>{shows.map((show) => <option key={show.id} value={show.id}>{show.show_date} - {show.title}</option>)}</select></label>
+          {!form.show_id && manualShowGroups.length > 0 ? <label className="mt-4 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Existing Manual Show</span><select value={`${form.manual_show_date}|${form.manual_show_title}`} onChange={selectManualShow} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"><option value="|">Choose an existing manual show</option>{manualShowGroups.map(([key, group]) => <option key={key} value={key}>{group.date ? `${group.date} - ` : ""}{group.title} ({group.count})</option>)}</select></label> : null}
+          {!form.show_id ? <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Manual Show Title</span><input name="manual_show_title" value={form.manual_show_title} onChange={updateField} placeholder="Example: Fall 2024 Show" className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none placeholder:text-[#8b7a60] focus:border-[#f4d28b]" /></label><label className="block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Manual Show Date</span><input name="manual_show_date" type="date" value={form.manual_show_date} onChange={updateField} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" /></label></div> : null}
           <label className="mt-4 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Type</span><select name="media_type" value={form.media_type} onChange={updateField} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"><option value="photo">Photo</option><option value="video">Video</option></select></label>
           <label className="mt-4 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Image URL</span><input name="image_url" value={form.image_url} onChange={updateField} className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]" /></label>
           {form.media_type === "photo" ? <label className="mt-4 block"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">Upload Photo</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadPhoto} disabled={uploading} className="mt-2 block w-full text-sm text-[#d9c8aa] file:mr-4 file:rounded-full file:border-0 file:bg-[#d7a84f] file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-[0.14em] file:text-[#120d07]" /></label> : null}
