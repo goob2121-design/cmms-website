@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroFogVideo } from "@/components/HeroFogVideo";
@@ -11,6 +12,40 @@ import {
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
 import { shows } from "./show-dates/showData";
+
+const homepageShareImage =
+  "https://www.cumberlandmountainmusic.com/cmms-og-image.png";
+
+export const metadata: Metadata = {
+  title: "Cumberland Mountain Music Show",
+  description:
+    "Live bluegrass, gospel, and classic country music from Cumberland Gap, Tennessee.",
+  alternates: {
+    canonical: "https://www.cumberlandmountainmusic.com/",
+  },
+  openGraph: {
+    title: "Cumberland Mountain Music Show",
+    description:
+      "Live bluegrass, gospel, and classic country music from Cumberland Gap, Tennessee.",
+    url: "https://www.cumberlandmountainmusic.com/",
+    type: "website",
+    images: [
+      {
+        url: homepageShareImage,
+        width: 1200,
+        height: 630,
+        alt: "Cumberland Mountain Music Show",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cumberland Mountain Music Show",
+    description:
+      "Live bluegrass, gospel, and classic country music from Cumberland Gap, Tennessee.",
+    images: [homepageShareImage],
+  },
+};
 
 const fallbackHomepageAbout = {
   title: "About The Show",
