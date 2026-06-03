@@ -14,7 +14,7 @@ import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
 import { shows } from "./show-dates/showData";
 
 const homepageShareImage =
-  "https://www.cumberlandmountainmusic.com/cmms-og-image.png";
+  "https://www.cumberlandmountainmusic.com/cmms-og-image.png?v=2026-06-02";
 
 export const metadata: Metadata = {
   title: "Cumberland Mountain Music Show",
