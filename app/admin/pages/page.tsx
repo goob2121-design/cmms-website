@@ -23,8 +23,18 @@ type BandFeatureSettingsForm = {
   subtitle: string;
 };
 
+type HomepageHeroTextSettingsForm = {
+  tagline: string;
+  genres: string;
+};
+
 const pageKeys = ["about", "contact", "homepage_about"] as const;
 type PageKey = (typeof pageKeys)[number];
+
+const homepageHeroTextSettingKeys = {
+  tagline: "homepage_hero_tagline",
+  genres: "homepage_hero_genres",
+} as const;
 
 const bandFeatureSettingKeys = {
   image: "meet_the_band_feature_image",
@@ -82,6 +92,11 @@ export default function AdminPagesPage() {
       title: "",
       subtitle: "",
     });
+  const [homepageHeroTextSettings, setHomepageHeroTextSettings] =
+    useState<HomepageHeroTextSettingsForm>({
+      tagline: "The #1 Live Music Show in the Tri-State Area",
+      genres: "Bluegrass • Gospel • Country • Traditional Mountain Music",
+    });
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -134,7 +149,10 @@ export default function AdminPagesPage() {
       const { data: settings, error: settingsError } = await supabase
         .from("site_settings")
         .select("setting_key,setting_value")
-        .in("setting_key", Object.values(bandFeatureSettingKeys));
+        .in("setting_key", [
+          ...Object.values(bandFeatureSettingKeys),
+          ...Object.values(homepageHeroTextSettingKeys),
+        ]);
 
       if (settingsError) {
         setErrorMessage(settingsError.message);
@@ -151,6 +169,14 @@ export default function AdminPagesPage() {
             settingsMap.get(bandFeatureSettingKeys.image) || "/cartoon-band.jpg",
           title: settingsMap.get(bandFeatureSettingKeys.title) || "",
           subtitle: settingsMap.get(bandFeatureSettingKeys.subtitle) || "",
+        });
+        setHomepageHeroTextSettings({
+          tagline:
+            settingsMap.get(homepageHeroTextSettingKeys.tagline) ||
+            "The #1 Live Music Show in the Tri-State Area",
+          genres:
+            settingsMap.get(homepageHeroTextSettingKeys.genres) ||
+            "Bluegrass • Gospel • Country • Traditional Mountain Music",
         });
       }
 
@@ -179,6 +205,16 @@ export default function AdminPagesPage() {
   ) {
     const { name, value } = event.target;
     setBandFeatureSettings((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function updateHomepageHeroTextSetting(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const { name, value } = event.target;
+    setHomepageHeroTextSettings((current) => ({
       ...current,
       [name]: value,
     }));
@@ -255,6 +291,40 @@ export default function AdminPagesPage() {
     setMessage("Meet the Band feature settings saved.");
   }
 
+  async function saveHomepageHeroTextSettings() {
+    if (!supabase) {
+      return;
+    }
+
+    setMessage("");
+    setErrorMessage("");
+    const rows = [
+      {
+        setting_key: homepageHeroTextSettingKeys.tagline,
+        setting_value:
+          homepageHeroTextSettings.tagline.trim() ||
+          "The #1 Live Music Show in the Tri-State Area",
+      },
+      {
+        setting_key: homepageHeroTextSettingKeys.genres,
+        setting_value:
+          homepageHeroTextSettings.genres.trim() ||
+          "Bluegrass • Gospel • Country • Traditional Mountain Music",
+      },
+    ];
+
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert(rows, { onConflict: "setting_key" });
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setMessage("Homepage hero text saved.");
+  }
+
   if (isCheckingSession) {
     return (
       <main className="relative z-10 mx-auto min-h-svh w-full max-w-6xl px-6 pb-14 pt-40 text-[#e7d8c2] sm:px-8">
@@ -286,6 +356,46 @@ export default function AdminPagesPage() {
       {errorMessage ? <p className="mt-6 rounded-md border border-red-300/25 bg-red-950/35 px-4 py-3 text-sm text-red-100">{errorMessage}</p> : null}
 
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
+        <article className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.24)] lg:col-span-2">
+          <h2 className="text-2xl font-semibold text-white">
+            Homepage Hero Text
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[#d9c8aa]">
+            Edit the two text lines shown under the main logo on the homepage.
+          </p>
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            <label className="block">
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">
+                Main Line
+              </span>
+              <input
+                name="tagline"
+                value={homepageHeroTextSettings.tagline}
+                onChange={updateHomepageHeroTextSetting}
+                className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">
+                Music Styles Line
+              </span>
+              <input
+                name="genres"
+                value={homepageHeroTextSettings.genres}
+                onChange={updateHomepageHeroTextSetting}
+                className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none focus:border-[#f4d28b]"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={saveHomepageHeroTextSettings}
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#d7a84f] px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:bg-[#f1c86e]"
+          >
+            Save Homepage Hero Text
+          </button>
+        </article>
+
         <article className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 shadow-[0_18px_55px_rgba(0,0,0,0.24)] lg:col-span-2">
           <h2 className="text-2xl font-semibold text-white">
             Meet the Band Feature

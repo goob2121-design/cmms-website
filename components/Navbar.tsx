@@ -90,7 +90,7 @@ export function Navbar({
             priority
             className="h-10 w-10 rounded-full object-contain shadow-[0_0_30px_rgba(215,168,79,0.22)] sm:h-12 sm:w-12"
           />
-          <span className="hidden text-left text-sm font-semibold uppercase tracking-[0.2em] text-[#f4d28b] sm:block">
+          <span className="hidden min-w-[10.5rem] text-center text-sm font-semibold uppercase tracking-[0.16em] text-[#f4d28b] sm:block">
             Cumberland
             <span className="block text-[#fff7ea]">Mountain Music</span>
           </span>

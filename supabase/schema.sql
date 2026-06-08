@@ -799,6 +799,12 @@ on conflict (setting_key) do nothing;
 
 insert into public.site_settings (setting_key, setting_value)
 values
+  ('homepage_hero_tagline', 'The #1 Live Music Show in the Tri-State Area'),
+  ('homepage_hero_genres', 'Bluegrass • Gospel • Country • Traditional Mountain Music')
+on conflict (setting_key) do nothing;
+
+insert into public.site_settings (setting_key, setting_value)
+values
   ('show_meet_the_band', 'false'),
   ('show_meet_the_team', 'false')
 on conflict (setting_key) do nothing;

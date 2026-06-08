@@ -54,6 +54,11 @@ const fallbackHomepageAbout = {
     "The Cumberland Mountain Music Show was created by Bryan Turner as a place to celebrate the music, stories, and people that make this region special. Built around bluegrass, gospel, country, and traditional mountain music, the show brings families together for an evening of live entertainment in the heart of Cumberland Gap.",
 };
 
+const fallbackHomepageHeroText = {
+  tagline: "The #1 Live Music Show in the Tri-State Area",
+  genres: "Bluegrass • Gospel • Country • Traditional Mountain Music",
+};
+
 export const dynamic = "force-dynamic";
 
 type ScheduleItem = {
@@ -138,11 +143,15 @@ export default async function Home() {
     tickerMessages,
     tickerSpeedSetting,
     homepageAboutPage,
+    homepageHeroTaglineSetting,
+    homepageHeroGenresSetting,
   ] = await Promise.all([
     getPublishedShows(),
     getActiveTickerMessages(),
     getSiteSetting("homepage_ticker_speed"),
     getSitePage("homepage_about"),
+    getSiteSetting("homepage_hero_tagline"),
+    getSiteSetting("homepage_hero_genres"),
   ]);
   const schedule =
     databaseShows.length > 0
@@ -161,6 +170,14 @@ export default async function Home() {
     subtitle:
       homepageAboutPage?.subtitle?.trim() || fallbackHomepageAbout.subtitle,
     body: homepageAboutPage?.body?.trim() || fallbackHomepageAbout.body,
+  };
+  const homepageHeroText = {
+    tagline:
+      homepageHeroTaglineSetting?.setting_value?.trim() ||
+      fallbackHomepageHeroText.tagline,
+    genres:
+      homepageHeroGenresSetting?.setting_value?.trim() ||
+      fallbackHomepageHeroText.genres,
   };
 
   return (
@@ -201,10 +218,10 @@ export default async function Home() {
                 className="h-auto w-[min(84vw,580px)] object-contain drop-shadow-[0_18px_42px_rgba(0,0,0,0.72)] sm:w-[min(72vw,640px)]"
               />
               <p className="mt-5 text-balance text-xl font-semibold leading-8 text-[#fff7ea] drop-shadow-[0_8px_24px_rgba(0,0,0,0.58)] sm:text-2xl">
-                The #1 Live Music Show in the Tri-State Area
+                {homepageHeroText.tagline}
               </p>
               <p className="mt-2 text-balance text-sm font-semibold uppercase tracking-[0.18em] text-[#f4d28b] drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)] sm:text-base sm:tracking-[0.22em]">
-                Bluegrass • Gospel • Country • Traditional Mountain Music
+                {homepageHeroText.genres}
               </p>
               <div className="mt-7 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
                 {nextScheduleDate && !nextTicketsAvailable ? (
