@@ -45,8 +45,11 @@ export const metadata: Metadata = {
     images: [defaultSocialImage],
   },
   icons: {
-    icon: "/favicon.png",
-    shortcut: "/favicon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/favicon.png",
   },
 };
@@ -128,12 +131,22 @@ export default async function RootLayout({
                 In Memory
               </Link>
             </div>
-            <Link
-              href="/admin"
-              className="mt-4 inline-flex text-[11px] uppercase tracking-[0.18em] text-[#7d705f] transition hover:text-[#bda987]"
-            >
-              Staff Login
-            </Link>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <Link
+                href="/admin"
+                className="inline-flex text-[11px] uppercase tracking-[0.18em] text-[#7d705f] transition hover:text-[#bda987]"
+              >
+                Staff Login
+              </Link>
+              <a
+                href="https://stageflow.cumberlandmountainmusic.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex text-[11px] uppercase tracking-[0.18em] text-[#7d705f] transition hover:text-[#bda987]"
+              >
+                Stageflow
+              </a>
+            </div>
           </footer>
         </div>
       </body>
