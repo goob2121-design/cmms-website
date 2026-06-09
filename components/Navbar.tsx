@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Navbar({
   showNews = false,
@@ -35,6 +35,7 @@ export function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const aboutDropdownRef = useRef<HTMLDivElement>(null);
   const navItems: { label: string; href: string; Icon: LucideIcon }[] = [
     { label: "Home", href: "/", Icon: Home },
     { label: "Shows", href: "/show-dates", Icon: CalendarDays },
@@ -68,6 +69,35 @@ export function Navbar({
       document.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isAboutOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        aboutDropdownRef.current &&
+        !aboutDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsAboutOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAboutOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAboutOpen]);
 
   return (
     <header
@@ -155,13 +185,14 @@ export function Navbar({
             );
           })}
           <div
-            className="relative"
+            className="nav-dropdown group relative"
+            ref={aboutDropdownRef}
+            onMouseEnter={() => setIsAboutOpen(true)}
             onMouseLeave={() => setIsAboutOpen(false)}
           >
             <button
               type="button"
               onClick={() => setIsAboutOpen((current) => !current)}
-              onMouseEnter={() => setIsAboutOpen(true)}
               className="group inline-flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 transition hover:text-[#f4d28b] lg:gap-1 lg:px-0 lg:py-0 xl:gap-1.5"
               aria-expanded={isAboutOpen}
             >
@@ -180,10 +211,9 @@ export function Navbar({
               />
             </button>
             <div
-              className={`mt-2 grid gap-1 rounded-md border border-[#d7a84f]/15 bg-black/20 p-2 lg:absolute lg:left-1/2 lg:top-full lg:z-50 lg:mt-3 lg:min-w-48 lg:-translate-x-1/2 lg:bg-[#080604]/96 lg:shadow-[0_18px_42px_rgba(0,0,0,0.38)] lg:backdrop-blur-xl ${
+              className={`dropdown-menu mt-2 gap-1 rounded-md border border-[#d7a84f]/15 bg-black/20 p-2 lg:absolute lg:left-1/2 lg:top-full lg:z-50 lg:mt-0 lg:min-w-48 lg:-translate-x-1/2 lg:bg-[#080604]/96 lg:shadow-[0_18px_42px_rgba(0,0,0,0.38)] lg:backdrop-blur-xl ${
                 isAboutOpen ? "grid" : "hidden"
               }`}
-              onMouseEnter={() => setIsAboutOpen(true)}
             >
               {aboutItems.map(({ href, label, Icon }) => (
                 <Link
