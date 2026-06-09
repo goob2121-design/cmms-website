@@ -100,6 +100,14 @@ export default async function RootLayout({
               Cumberland Mountain Music, Cumberland Gap, Tennessee.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              <a
+                href="https://facebook.com/cumberlandmountainmusic"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"
+              >
+                Facebook
+              </a>
               <Link
                 href="/mailing-list"
                 className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d7a84f] transition hover:text-[#f4d28b]"

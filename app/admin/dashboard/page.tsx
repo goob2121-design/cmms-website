@@ -47,6 +47,11 @@ const adminAreas = [
     description: "Manage public photos and video links.",
   },
   {
+    name: "Merch",
+    href: "/admin/merch",
+    description: "Add Fourthwall products and manage the merch page.",
+  },
+  {
     name: "Ticker Messages",
     href: "/admin/ticker",
     description: "Manage homepage ticker announcements and ordering.",

@@ -196,6 +196,34 @@ alter table public.media_items add column if not exists show_id uuid references 
 alter table public.media_items add column if not exists manual_show_title text;
 alter table public.media_items add column if not exists manual_show_date date;
 
+create table if not exists public.merch_products (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text,
+  price text,
+  image_url text,
+  product_url text not null,
+  display_order int default 0,
+  published boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'merch_products_product_url_key'
+      and conrelid = 'public.merch_products'::regclass
+  ) then
+    alter table public.merch_products
+    add constraint merch_products_product_url_key
+    unique (product_url);
+  end if;
+end;
+$$;
+
 create table if not exists public.ticker_messages (
   id uuid primary key default gen_random_uuid(),
   message text not null,
@@ -327,6 +355,7 @@ alter table public.snack_shop_settings enable row level security;
 alter table public.site_pages enable row level security;
 alter table public.news_posts enable row level security;
 alter table public.media_items enable row level security;
+alter table public.merch_products enable row level security;
 alter table public.ticker_messages enable row level security;
 alter table public.site_settings enable row level security;
 alter table public.people_profiles enable row level security;
@@ -572,6 +601,20 @@ to authenticated
 using (true)
 with check (true);
 
+drop policy if exists "Public visitors can read published merch products" on public.merch_products;
+create policy "Public visitors can read published merch products"
+on public.merch_products
+for select
+using (published = true);
+
+drop policy if exists "Authenticated users can manage merch products" on public.merch_products;
+create policy "Authenticated users can manage merch products"
+on public.merch_products
+for all
+to authenticated
+using (true)
+with check (true);
+
 drop policy if exists "Public visitors can read active ticker messages" on public.ticker_messages;
 create policy "Public visitors can read active ticker messages"
 on public.ticker_messages
@@ -750,6 +793,12 @@ before update on public.media_items
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists set_merch_products_updated_at on public.merch_products;
+create trigger set_merch_products_updated_at
+before update on public.merch_products
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists set_ticker_messages_updated_at on public.ticker_messages;
 create trigger set_ticker_messages_updated_at
 before update on public.ticker_messages
@@ -815,6 +864,78 @@ values
   ('meet_the_band_feature_title', null),
   ('meet_the_band_feature_subtitle', null)
 on conflict (setting_key) do nothing;
+
+insert into public.merch_products (
+  title,
+  description,
+  price,
+  image_url,
+  product_url,
+  display_order,
+  published
+)
+values
+  (
+    'Cumberland Mountain Music T-Shirt',
+    'A comfortable everyday shirt for show nights, road trips, and fans of live mountain music.',
+    '$12.50',
+    'https://imgproxy.fourthwall.dev/czSyHhgJrQ0lnH_yzeHkfS2VAvNYxBekuZJniA-Y3cY/w:1200/sm:1/enc/6HRBAwQBl41_soMC/Ji3kohTAzNZACK7R/3j0uqWKW_0Lg4rK_/YLINWpSzvq335hn9/BoJH7e-nP-Ntx31l/NoXiERu-bQy8Bjk3/PfnEDLWCiu7tmZue/DOseZEkNNRY_m0hn/J2h8lISYHCmujxaX/-3R38g25o2oxM1Di/Rt9IVq24E2zKzrST/0XeeFNZ5bHXA7eax/0IG9F_wq8xkS0qsw/akWb_mcWLu7LaZfg/FC2Afm_QTTc.png',
+    'https://cumberland-mountain-music-shop.fourthwall.com/products/cumberland-mountain-music-show-t',
+    0,
+    true
+  ),
+  (
+    'Cumberland Mountain Music Band T-Shirt',
+    'A band-style shirt for folks who want a little more stage-night energy in their merch.',
+    '$18.45',
+    'https://imgproxy.fourthwall.dev/ExUlfWThtC1MMjwHmhy4ahvBGQw7qokzJEAxE4HZm2Y/w:1200/sm:1/enc/t3Ar5QXnKxBL8Oek/Ag4Pmuvs1fGGLYB1/Xzg-WZTebcUQBKzB/Nv2LiIMyk7u7swA3/Uw92XYJHRy18e6ll/TYU3SBl5aXcpcPP0/DLowmOIJdxl8-dOL/9wMBNkGefGNkTkcT/qM3GP20q0SwVMxvg/cvfnAMnLG4Hr3wx_/HWFM2UCC3ucKbYjK/ZWhsn4jYKXLssiNI/fYN8JjM_L8cNzwQg/fOhwsUUVqNnD22EF/y2RVENh5XqM.png',
+    'https://cumberland-mountain-music-shop.fourthwall.com/products/cumberland-mountain-music-show-band-t',
+    1,
+    true
+  ),
+  (
+    'Cumberland Mountain Music Hat',
+    'A classic cap with Cumberland Mountain Music style for the show, the porch, or the road.',
+    '$18.65',
+    'https://imgproxy.fourthwall.dev/0ki2r8-6S7UPiShWNcqDkw74BveqF5ufLugOFbQrA64/w:1200/sm:1/enc/KumBAeD-XXR7f6L_/sZjzR2BWVHFFn3HK/a4hbBuhAa4Z6jG2u/f-YIzt2cYgQ4HlFM/m8LueAsuk3VNo7iU/FVb3ax_Axzk4Js9_/m46bqolXe_4gUEGB/wk7yWYegnn0goxZr/lDZ12zOn1goNHZib/Po9IHTYaytN7WA9K/wKlPlk0PexhtbVvh/j_ON2ng2As63dh4y/I0-2j0rEEh8PJEJJ/d5-JqMULlNhlkvra/_JrcKdFeD14.png',
+    'https://cumberland-mountain-music-shop.fourthwall.com/products/cumberland-mountain-music-show-hat',
+    2,
+    true
+  ),
+  (
+    'Cumberland Mountain Music Trucker Hat',
+    'A breathable trucker hat made for long days, live music, and Cumberland Gap pride.',
+    '$15.95',
+    'https://imgproxy.fourthwall.dev/br5NzGORwIdtF8EuXC_3jsq5qK0vAKEOqzZyT-S3lKw/w:1200/sm:1/enc/hGitBjaJi7F8tGwr/6bKc9jEe_rX3Fa-_/joAr7clHxMOoWyRq/LGxeSxF6FHrsJYMQ/_2rYABVlQq59eGq-/k13lQtdxkFX5H0nJ/5MhQaCrJ0-TsZz-H/FrgJLVuLCgDLVPrj/QFjssApFm7uaIZXC/pweGLX0t-ba_SVuu/0WnfaA4dRuNHxpin/Q9SrSOYDt8m3SaWr/PFLzBBCI1Ir099lS/MrEes7Q3jRQQ3LPR/g0J4Zb5nNo0.png',
+    'https://cumberland-mountain-music-shop.fourthwall.com/products/cumberland-mountain-music-show-trucker-hat',
+    3,
+    true
+  ),
+  (
+    'Cumberland Mountain Music Hoodie',
+    'A cozy hoodie for cool evenings, festival weather, and staying warm between sets.',
+    '$31.00',
+    'https://imgproxy.fourthwall.dev/5tC5KZB-Zg3PvurwkoxSv9mNPH56aV3t2MhZJVngJZg/w:1200/sm:1/enc/nSsPMw6Aj09JSkeq/jn8e-vIZJCH_JtDr/v7tisk0Y99vdTxBy/qVygzir12eybOGq9/j75nZXWVVTlGnXVO/AyqYNm92MJHFaiAP/rLBaR4jSKMYWQ19k/P8NDkUaHTYjQGChb/74Xh2e2WXZVgYle_/1ejHAhf2TrRF5yb9/V7pR8s2Chbw5LQ6F/fsj7Ee-aRseoXIYa/FFZH6KY7jmYs3AMI/FuIELUy8zNd5pTpj/XUPl8fddtg0.png',
+    'https://cumberland-mountain-music-shop.fourthwall.com/products/cumberland-mountain-music-show-hoodie',
+    4,
+    true
+  ),
+  (
+    'Cumberland Mountain Music Coffee Mug',
+    'A sturdy mug for morning coffee, late-night picking sessions, and everyday support.',
+    '$11.95',
+    'https://imgproxy.fourthwall.dev/JHlcaV8r6E6SIpsygWF2fmMQjGn3yLKnXc7fHJSRWL4/w:1200/sm:1/enc/zPx-coDQ-wAMsEX2/0qTojKo_8OsyD940/9YFrsholBipyCHWT/pGKi-8y-aU3C1Uv4/uZb6gvzxz_bl6qyd/RHA_3gas1xKSCA4I/NMXUgCqAV3oCTbhM/ekYKEHlQEypnx7qN/XeDuiwLsAJLqbj3D/J5ul4izlL49Wt-Ll/v4JnJBZmu8nVCOON/3PCRtpry3F1HLIqV/rGnKmoeUeOCWTEWo/Qa4r35K49NLfam7k/2gVDZQVRIZQ.png',
+    'https://cumberland-mountain-music-shop.fourthwall.com/products/cumberland-mountain-music-show-coffee-mug',
+    5,
+    true
+  )
+on conflict (product_url) do update set
+  title = excluded.title,
+  description = excluded.description,
+  price = excluded.price,
+  image_url = excluded.image_url,
+  display_order = excluded.display_order,
+  published = excluded.published;
 
 insert into public.snack_shop_settings (
   menu_image_url,

@@ -43,6 +43,19 @@ export type MediaItem = {
   updated_at: string | null;
 };
 
+export type MerchProduct = {
+  id: string;
+  title: string;
+  description: string | null;
+  price: string | null;
+  image_url: string | null;
+  product_url: string;
+  display_order: number | null;
+  published: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 export type TickerMessage = {
   id: string;
   message: string;
@@ -197,6 +210,26 @@ export async function getPublishedMediaItemsForShow(showId: string) {
   }
 
   return (data ?? []) as MediaItem[];
+}
+
+export async function getPublishedMerchProducts() {
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("merch_products")
+    .select("*")
+    .eq("published", true)
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.warn("Unable to load merch products:", error.message);
+    return [];
+  }
+
+  return (data ?? []) as MerchProduct[];
 }
 
 export async function hasPublishedNews() {

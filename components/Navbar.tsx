@@ -2,11 +2,11 @@
 
 import {
   CalendarDays,
+  ChevronDown,
   X,
   Handshake,
   Home,
   Images,
-  Link2,
   Mail,
   Menu,
   Music,
@@ -34,25 +34,26 @@ export function Navbar({
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const navItems: { label: string; href: string; Icon: LucideIcon }[] = [
     { label: "Home", href: "/", Icon: Home },
-    { label: "Show Dates", href: "/show-dates", Icon: CalendarDays },
-    { label: "About", href: "/about", Icon: Music },
+    { label: "Shows", href: "/show-dates", Icon: CalendarDays },
+    { label: "Sponsors", href: "/sponsors", Icon: Handshake },
+    { label: "Merch", href: "/merch", Icon: Images },
+    { label: "Contact", href: "/contact", Icon: Mail },
+    ...(showNews ? [{ label: "News", href: "/news", Icon: Newspaper }] : []),
+    ...(showMedia ? [{ label: "Media", href: "/media", Icon: Images }] : []),
+  ];
+  const navItemsBeforeAbout = navItems.slice(0, 2);
+  const navItemsAfterAbout = navItems.slice(2);
+  const aboutItems: { label: string; href: string; Icon: LucideIcon }[] = [
+    { label: "About CMMS", href: "/about", Icon: Music },
     ...(showBand
       ? [{ label: "Meet the Band", href: "/meet-the-band", Icon: Users }]
       : []),
     ...(showTeam
       ? [{ label: "Meet the Team", href: "/meet-the-team", Icon: Users }]
       : []),
-    { label: "Sponsors", href: "/sponsors", Icon: Handshake },
-    { label: "Contact", href: "/contact", Icon: Mail },
-    ...(showNews ? [{ label: "News", href: "/news", Icon: Newspaper }] : []),
-    ...(showMedia ? [{ label: "Media", href: "/media", Icon: Images }] : []),
-    {
-      label: "Facebook",
-      href: "https://facebook.com/cumberlandmountainmusic",
-      Icon: Link2,
-    },
   ];
 
   useEffect(() => {
@@ -134,7 +135,77 @@ export function Navbar({
           }`}
           aria-label="Primary navigation"
         >
-          {navItems.map(({ href, label, Icon }) => {
+          {navItemsBeforeAbout.map(({ href, label, Icon }) => {
+            const className =
+              "group inline-flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 transition hover:text-[#f4d28b] lg:gap-1 lg:px-0 lg:py-0 xl:gap-1.5";
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={className}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Icon
+                  aria-hidden="true"
+                  className="h-4 w-4 text-[#d7a84f]/78 transition duration-200 group-hover:-translate-y-0.5 group-hover:text-[#f4d28b]"
+                  strokeWidth={1.8}
+                />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+          <div
+            className="relative"
+            onMouseLeave={() => setIsAboutOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setIsAboutOpen((current) => !current)}
+              onMouseEnter={() => setIsAboutOpen(true)}
+              className="group inline-flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 transition hover:text-[#f4d28b] lg:gap-1 lg:px-0 lg:py-0 xl:gap-1.5"
+              aria-expanded={isAboutOpen}
+            >
+              <Music
+                aria-hidden="true"
+                className="h-4 w-4 text-[#d7a84f]/78 transition duration-200 group-hover:-translate-y-0.5 group-hover:text-[#f4d28b]"
+                strokeWidth={1.8}
+              />
+              <span>About</span>
+              <ChevronDown
+                aria-hidden="true"
+                className={`h-3.5 w-3.5 text-[#d7a84f]/78 transition ${
+                  isAboutOpen ? "rotate-180" : ""
+                }`}
+                strokeWidth={2}
+              />
+            </button>
+            <div
+              className={`mt-2 grid gap-1 rounded-md border border-[#d7a84f]/15 bg-black/20 p-2 lg:absolute lg:left-1/2 lg:top-full lg:z-50 lg:mt-3 lg:min-w-48 lg:-translate-x-1/2 lg:bg-[#080604]/96 lg:shadow-[0_18px_42px_rgba(0,0,0,0.38)] lg:backdrop-blur-xl ${
+                isAboutOpen ? "grid" : "hidden"
+              }`}
+              onMouseEnter={() => setIsAboutOpen(true)}
+            >
+              {aboutItems.map(({ href, label, Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="group inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-[#d7a84f]/10 hover:text-[#f4d28b]"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsAboutOpen(false);
+                  }}
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className="h-4 w-4 text-[#d7a84f]/78"
+                    strokeWidth={1.8}
+                  />
+                  <span>{label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          {navItemsAfterAbout.map(({ href, label, Icon }) => {
             const isExternal = href.startsWith("http");
             const className =
               "group inline-flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-1.5 transition hover:text-[#f4d28b] lg:gap-1 lg:px-0 lg:py-0 xl:gap-1.5";
