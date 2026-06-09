@@ -1,15 +1,37 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { createPublicPageMetadata } from "@/lib/metadata";
 import { getPublishedMerchProducts, type MerchProduct } from "@/lib/supabase/cms";
 
-export const metadata: Metadata = createPublicPageMetadata({
-  title: "Merch | Cumberland Mountain Music",
-  description:
-    "Official Cumberland Mountain Music shirts, hats, hoodies, mugs, and more fulfilled through Fourthwall.",
-  path: "/merch",
-  image: "/cmms-og-image.png",
-});
+const merchShareImage = "https://www.cumberlandmountainmusic.com/cmms-og-image.jpg";
+
+export const metadata: Metadata = {
+  title: "Cumberland Mountain Music Show Merch",
+  description: "Official merchandise for the Cumberland Mountain Music Show.",
+  alternates: {
+    canonical: "https://www.cumberlandmountainmusic.com/merch",
+  },
+  openGraph: {
+    title: "Cumberland Mountain Music Show Merch",
+    description: "Official merchandise for the Cumberland Mountain Music Show.",
+    url: "https://www.cumberlandmountainmusic.com/merch",
+    siteName: "Cumberland Mountain Music",
+    images: [
+      {
+        url: merchShareImage,
+        width: 1200,
+        height: 630,
+        alt: "Cumberland Mountain Music Show Merch",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cumberland Mountain Music Show Merch",
+    description: "Official merchandise for the Cumberland Mountain Music Show.",
+    images: [merchShareImage],
+  },
+};
 
 type MerchProductCard = {
   title: string;
