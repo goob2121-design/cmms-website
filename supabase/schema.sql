@@ -80,12 +80,14 @@ create table if not exists public.sponsors (
   contact_phone text,
   notes text,
   display_order int default 0,
+  show_on_homepage boolean default false,
   active boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
 alter table public.sponsors add column if not exists display_order int default 0;
+alter table public.sponsors add column if not exists show_on_homepage boolean default false;
 
 create table if not exists public.show_sponsors (
   id uuid primary key default gen_random_uuid(),

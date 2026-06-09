@@ -14,6 +14,7 @@ export type DbSponsor = {
   contact_phone: string | null;
   notes: string | null;
   display_order: number | null;
+  show_on_homepage: boolean | null;
   active: boolean | null;
   created_at: string | null;
   updated_at: string | null;
@@ -29,6 +30,7 @@ export type PublicSponsor = Pick<
   | "description"
   | "sponsor_level"
   | "display_order"
+  | "show_on_homepage"
   | "active"
 >;
 
@@ -39,7 +41,7 @@ type ShowSponsorRow = {
 };
 
 const publicSponsorFields =
-  "id,name,slug,logo_url,website_url,description,sponsor_level,display_order,active";
+  "id,name,slug,logo_url,website_url,description,sponsor_level,display_order,show_on_homepage,active";
 
 function compareSponsors(a: PublicSponsor, b: PublicSponsor) {
   return (
@@ -63,6 +65,27 @@ export async function getActiveSponsors() {
 
   if (error) {
     console.warn("Unable to load Supabase sponsors:", error.message);
+    return [];
+  }
+
+  return ((data ?? []) as PublicSponsor[]).sort(compareSponsors);
+}
+
+export async function getHomepageSponsors() {
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("sponsors")
+    .select(publicSponsorFields)
+    .eq("active", true)
+    .eq("show_on_homepage", true)
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.warn("Unable to load homepage sponsors:", error.message);
     return [];
   }
 

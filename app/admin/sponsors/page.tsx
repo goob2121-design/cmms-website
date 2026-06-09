@@ -26,6 +26,7 @@ type SponsorForm = {
   contact_phone: string;
   notes: string;
   display_order: string;
+  show_on_homepage: boolean;
   active: boolean;
 };
 
@@ -41,6 +42,7 @@ const emptyForm: SponsorForm = {
   contact_phone: "",
   notes: "",
   display_order: "0",
+  show_on_homepage: false,
   active: true,
 };
 
@@ -89,6 +91,7 @@ function toForm(sponsor: DbSponsor): SponsorForm {
     contact_phone: sponsor.contact_phone ?? "",
     notes: sponsor.notes ?? "",
     display_order: String(sponsor.display_order ?? 0),
+    show_on_homepage: Boolean(sponsor.show_on_homepage),
     active: Boolean(sponsor.active),
   };
 }
@@ -108,6 +111,7 @@ function toPayload(form: SponsorForm) {
     contact_phone: cleanValue(form.contact_phone),
     notes: cleanValue(form.notes),
     display_order: Number.parseInt(form.display_order, 10) || 0,
+    show_on_homepage: form.show_on_homepage,
     active: form.active,
   };
 }
@@ -263,10 +267,12 @@ export default function AdminSponsorsPage() {
     setMessage("Logo uploaded. Save the sponsor to keep this image.");
   }
 
-  function handleActiveChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleCheckboxChange(event: ChangeEvent<HTMLInputElement>) {
+    const name = event.target.name as "active" | "show_on_homepage";
+    const { checked } = event.target;
     setForm((current) => ({
       ...current,
-      active: event.target.checked,
+      [name]: checked,
     }));
   }
 
@@ -454,6 +460,11 @@ export default function AdminSponsorsPage() {
                       <span className="rounded-full border border-[#d7a84f]/20 px-3 py-1 text-xs uppercase tracking-[0.14em] text-[#f4d28b]">
                         {sponsor.active ? "Active" : "Inactive"}
                       </span>
+                      {sponsor.show_on_homepage ? (
+                        <span className="rounded-full border border-[#d7a84f]/20 px-3 py-1 text-xs uppercase tracking-[0.14em] text-[#f4d28b]">
+                          Homepage
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -606,12 +617,32 @@ export default function AdminSponsorsPage() {
 
           <label className="mt-5 inline-flex items-center gap-3 text-[#e7d8c2]">
             <input
+              name="active"
               type="checkbox"
               checked={form.active}
-              onChange={handleActiveChange}
+              onChange={handleCheckboxChange}
               className="h-5 w-5 accent-[#d7a84f]"
             />
             Active
+          </label>
+
+          <label className="mt-4 flex items-start gap-3 text-[#e7d8c2]">
+            <input
+              name="show_on_homepage"
+              type="checkbox"
+              checked={form.show_on_homepage}
+              onChange={handleCheckboxChange}
+              className="mt-1 h-5 w-5 accent-[#d7a84f]"
+            />
+            <span>
+              <span className="block font-semibold text-white">
+                Show on homepage
+              </span>
+              <span className="mt-1 block text-sm leading-6 text-[#d9c8aa]">
+                Adds this sponsor to the homepage sponsor strip. Show-specific
+                sponsor assignments stay separate.
+              </span>
+            </span>
           </label>
 
           <button

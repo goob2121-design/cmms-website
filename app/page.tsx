@@ -3,12 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { HeroFogVideo } from "@/components/HeroFogVideo";
 import { Ticker } from "@/components/Ticker";
-import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import {
   getActiveTickerMessages,
   getSitePage,
   getSiteSetting,
 } from "@/lib/supabase/cms";
+import { getHomepageSponsors, type PublicSponsor } from "@/lib/supabase/sponsors";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
 import { shows } from "./show-dates/showData";
@@ -137,6 +137,54 @@ function getNextScheduleDate(schedule: ScheduleItem[]) {
   return schedule.find((show) => show.date >= today);
 }
 
+function HomepageSponsorStrip({ sponsors }: { sponsors: PublicSponsor[] }) {
+  if (sponsors.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="mt-10 w-full max-w-5xl border-t border-[#d7a84f]/20 pt-4">
+      <h2 className="text-center text-sm font-bold uppercase tracking-[0.22em] text-[#f4d28b]">
+        Proudly Supported By
+      </h2>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:flex-nowrap lg:gap-3">
+        {sponsors.map((sponsor) => {
+          const logo = sponsor.logo_url ? (
+            <img
+              src={sponsor.logo_url}
+              alt={`${sponsor.name} logo`}
+              className="max-h-10 w-auto max-w-full object-contain opacity-75 grayscale transition duration-300 ease-out group-hover:scale-125 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:scale-125 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 sm:max-h-11 lg:max-h-12"
+            />
+          ) : (
+            <span className="text-center text-xs font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
+              {sponsor.name}
+            </span>
+          );
+          const className =
+            "group relative flex min-h-12 items-center justify-center rounded-md border border-[#d7a84f]/12 bg-black/18 px-3 py-1.5 transition duration-300 ease-out hover:z-10 hover:border-[#d7a84f]/45 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d28b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#080604] sm:w-36 lg:w-auto lg:min-w-28 lg:flex-1";
+
+          return sponsor.website_url ? (
+            <a
+              key={sponsor.id}
+              href={sponsor.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={sponsor.name}
+              className={className}
+            >
+              {logo}
+            </a>
+          ) : (
+            <div key={sponsor.id} className={className}>
+              {logo}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default async function Home() {
   const [
     databaseShows,
@@ -145,6 +193,7 @@ export default async function Home() {
     homepageAboutPage,
     homepageHeroTaglineSetting,
     homepageHeroGenresSetting,
+    homepageSponsors,
   ] = await Promise.all([
     getPublishedShows(),
     getActiveTickerMessages(),
@@ -152,6 +201,7 @@ export default async function Home() {
     getSitePage("homepage_about"),
     getSiteSetting("homepage_hero_tagline"),
     getSiteSetting("homepage_hero_genres"),
+    getHomepageSponsors(),
   ]);
   const schedule =
     databaseShows.length > 0
@@ -182,10 +232,10 @@ export default async function Home() {
 
   return (
     <main className="relative z-10">
-      <section className="relative isolate min-h-[78svh] overflow-hidden">
+      <section className="relative isolate min-h-[88svh] overflow-hidden">
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-0 bg-cover bg-center brightness-[1.16]"
+          className="absolute inset-0 z-0 bg-cover bg-[100%_42%] brightness-[1.16]"
           style={{ backgroundImage: "url('/cmms-heade-V2.png')" }}
         />
         <HeroFogVideo />
@@ -197,18 +247,18 @@ export default async function Home() {
           <img
             src="/cmms-header-fg.png?v=2"
             alt=""
-            className="h-full w-full object-cover object-center brightness-[0.88] drop-shadow-[0_0_18px_rgba(8,6,4,0.42)]"
+            className="h-full w-full object-cover object-[100%_42%] brightness-[0.88] drop-shadow-[0_0_18px_rgba(8,6,4,0.42)]"
           />
         </div>
 
-        <div className="relative z-[3] flex min-h-[78svh] flex-col pt-[124px] sm:pt-[104px]">
+        <div className="relative z-[3] flex min-h-[88svh] flex-col pt-[124px] sm:pt-[104px]">
           <Ticker
             messages={tickerMessages.map((ticker) => ticker.message)}
             speedSeconds={Number(tickerSpeedSetting?.setting_value ?? 30)}
           />
 
           <div className="mx-auto flex w-full max-w-7xl flex-1 items-end justify-center px-5 pb-8 pt-8 sm:px-8 lg:pb-10">
-            <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
+            <div className="mx-auto flex w-full max-w-4xl translate-y-8 flex-col items-center text-center sm:translate-y-10">
               <Image
                 src="/cmms-logo.png"
                 alt="Cumberland Mountain Music Show"
@@ -252,9 +302,7 @@ export default async function Home() {
                   View Show Details
                 </Link>
               </div>
-              {nextTicketUrl && nextTicketsAvailable ? (
-                <TicketCheckoutNote ticketUrl={nextTicketUrl} />
-              ) : null}
+              <HomepageSponsorStrip sponsors={homepageSponsors} />
             </div>
           </div>
         </div>
@@ -379,9 +427,6 @@ export default async function Home() {
                 Buy Advance Tickets
               </Link>
             )}
-            {nextTicketUrl && nextTicketsAvailable ? (
-              <TicketCheckoutNote ticketUrl={nextTicketUrl} />
-            ) : null}
           </article>
         </div>
       </section>
