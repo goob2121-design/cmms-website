@@ -235,7 +235,7 @@ export default async function Home() {
       <section className="relative isolate min-h-[88svh] overflow-hidden">
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-0 bg-cover bg-[100%_42%] brightness-[1.16]"
+          className="hero-background absolute inset-0 z-0 bg-cover bg-[100%_42%] brightness-[1.16]"
           style={{ backgroundImage: "url('/cmms-heade-V2.png')" }}
         />
         <HeroFogVideo />
@@ -247,7 +247,7 @@ export default async function Home() {
           <img
             src="/cmms-header-fg.png?v=2"
             alt=""
-            className="h-full w-full object-cover object-[100%_42%] brightness-[0.88] drop-shadow-[0_0_18px_rgba(8,6,4,0.42)]"
+            className="hero-foreground h-full w-full object-cover object-[100%_42%] brightness-[0.88] drop-shadow-[0_0_18px_rgba(8,6,4,0.42)]"
           />
         </div>
 

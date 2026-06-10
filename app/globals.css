@@ -74,3 +74,20 @@ html {
   height: 100%;
   object-fit: cover;
 }
+
+@media (max-width: 900px) {
+  .hero-background {
+    background-color: #080604;
+    background-image: none !important;
+    opacity: 0;
+  }
+
+  .hero-foreground {
+    display: none;
+  }
+
+  .hero-fog-video {
+    opacity: 0.62;
+    mix-blend-mode: normal;
+  }
+}

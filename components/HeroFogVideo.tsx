@@ -30,7 +30,7 @@ export function HeroFogVideo() {
       loop
       playsInline
       preload="metadata"
-      className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.34] mix-blend-screen"
+      className="hero-fog-video pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.34] mix-blend-screen"
     >
       <source src="/cmms-fog.mp4" type="video/mp4" />
     </video>
