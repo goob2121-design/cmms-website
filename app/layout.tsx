@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import {
+  formatNewYorkShowDate,
+  getInclusiveCountdownLabel,
+} from "@/lib/countdown";
+import {
   defaultDescription,
   defaultSocialImage,
   defaultTitle,
@@ -15,6 +19,8 @@ import {
 } from "@/lib/supabase/cms";
 import { getNextPublishedShow } from "@/lib/supabase/shows";
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -166,30 +172,8 @@ function getNextShowAnnouncement(show: {
   show_date: string;
   advance_ticket_price?: string | null;
 }) {
-  const today = new Date();
-  const todayStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  );
-  const [year, month, day] = show.show_date.split("-").map(Number);
-  const showStart = new Date(year, month - 1, day);
-  const calendarDaysUntil = Math.round(
-    (showStart.getTime() - todayStart.getTime()) / 86_400_000,
-  );
-  const showDateLabel = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(showStart);
-  const daysLabel =
-    calendarDaysUntil < 0
-      ? "Show Ended"
-      : calendarDaysUntil === 0
-        ? "Today"
-        : calendarDaysUntil === 1
-          ? "Tomorrow"
-          : `${calendarDaysUntil + 1} Days Away`;
+  const showDateLabel = formatNewYorkShowDate(show.show_date);
+  const daysLabel = getInclusiveCountdownLabel(show.show_date);
   const ticketPrice = formatTicketPrice(show.advance_ticket_price);
   const ticketLabel = ticketPrice
     ? ` • Advance Tickets ${ticketPrice}`
