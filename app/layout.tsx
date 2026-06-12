@@ -167,21 +167,29 @@ function getNextShowAnnouncement(show: {
   advance_ticket_price?: string | null;
 }) {
   const today = new Date();
-  const todayStart = Date.UTC(
-    today.getUTCFullYear(),
-    today.getUTCMonth(),
-    today.getUTCDate(),
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
   );
   const [year, month, day] = show.show_date.split("-").map(Number);
-  const showStart = Date.UTC(year, month - 1, day);
-  const daysUntil = Math.ceil((showStart - todayStart) / 86_400_000);
+  const showStart = new Date(year, month - 1, day);
+  const calendarDaysUntil = Math.round(
+    (showStart.getTime() - todayStart.getTime()) / 86_400_000,
+  );
   const showDateLabel = new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(showStart));
-  const daysLabel = daysUntil <= 0 ? "Today" : `${daysUntil} Days Away`;
+  }).format(showStart);
+  const daysLabel =
+    calendarDaysUntil < 0
+      ? "Show Ended"
+      : calendarDaysUntil === 0
+        ? "Today"
+        : calendarDaysUntil === 1
+          ? "Tomorrow"
+          : `${calendarDaysUntil + 1} Days Away`;
   const ticketPrice = formatTicketPrice(show.advance_ticket_price);
   const ticketLabel = ticketPrice
     ? ` • Advance Tickets ${ticketPrice}`
