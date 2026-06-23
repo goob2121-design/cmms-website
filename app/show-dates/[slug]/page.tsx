@@ -231,6 +231,16 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
                 {getSoldOutMessage(show.sold_out_message)}
               </span>
             ) : null}
+            {show.reserved_seating_url ? (
+              <a
+                href={show.reserved_seating_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/65 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+              >
+                Reserved Seating
+              </a>
+            ) : null}
             <Link
               href="/show-dates"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/65 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
@@ -238,6 +248,11 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
               Back to Show Dates
             </Link>
           </div>
+          {show.reserved_seating_url ? (
+            <p className="mt-3 text-center text-sm leading-6 text-[#bda987]">
+              Reserved seating links are emailed after ticket purchase. Please allow up to 24 hours for delivery.
+            </p>
+          ) : null}
           {show.ticket_url && ticketsAvailable ? (
             <TicketCheckoutNote ticketUrl={show.ticket_url} />
           ) : null}

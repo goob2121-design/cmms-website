@@ -27,6 +27,7 @@ type ShowForm = {
   advance_ticket_price: string;
   door_ticket_price: string;
   ticket_url: string;
+  reserved_seating_url: string;
   tickets_available: boolean;
   sold_out_message: string;
   details_url: string;
@@ -63,6 +64,7 @@ const emptyForm: ShowForm = {
   advance_ticket_price: "$8",
   door_ticket_price: "$10",
   ticket_url: "",
+  reserved_seating_url: "",
   tickets_available: true,
   sold_out_message: "",
   details_url: "",
@@ -94,6 +96,12 @@ const textFields: Array<{
   { name: "advance_ticket_price", label: "Advance Ticket Price" },
   { name: "door_ticket_price", label: "Door Ticket Price" },
   { name: "ticket_url", label: "Ticket URL", type: "url" },
+  {
+    name: "reserved_seating_url",
+    label: "Reserved Seating URL",
+    type: "url",
+    placeholder: "https://stageflow.cumberlandmountainmusic.com/available-seats",
+  },
   {
     name: "sold_out_message",
     label: "Sold Out / Ticket Message",
@@ -129,6 +137,7 @@ function toForm(show: DbShow): ShowForm {
     advance_ticket_price: show.advance_ticket_price ?? "",
     door_ticket_price: show.door_ticket_price ?? "",
     ticket_url: show.ticket_url ?? "",
+    reserved_seating_url: show.reserved_seating_url ?? "",
     tickets_available: show.tickets_available !== false,
     sold_out_message: show.sold_out_message ?? "",
     details_url: show.details_url ?? "",
@@ -160,6 +169,7 @@ function toPayload(form: ShowForm) {
     advance_ticket_price: cleanValue(form.advance_ticket_price),
     door_ticket_price: cleanValue(form.door_ticket_price),
     ticket_url: cleanValue(form.ticket_url),
+    reserved_seating_url: cleanValue(form.reserved_seating_url),
     tickets_available: form.tickets_available,
     sold_out_message: cleanValue(form.sold_out_message),
     details_url: cleanValue(form.details_url),
@@ -720,6 +730,11 @@ export default function AdminShowsPage() {
                   pattern={field.name === "slug" ? "[a-z0-9-]+" : undefined}
                   className="mt-2 min-h-11 w-full rounded-md border border-[#d7a84f]/25 bg-black/35 px-3 text-white outline-none transition placeholder:text-[#8b7a60] focus:border-[#f4d28b] focus:ring-2 focus:ring-[#d7a84f]/25"
                 />
+                {field.name === "reserved_seating_url" ? (
+                  <p className="mt-2 text-xs leading-5 text-[#bda987]">
+                    Optional. If provided, a Reserved Seating button will appear on the public show page and open in a new tab.
+                  </p>
+                ) : null}
               </label>
             ))}
           </div>

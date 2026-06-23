@@ -27,6 +27,7 @@ create table if not exists public.shows (
   advance_ticket_price text,
   door_ticket_price text,
   ticket_url text,
+  reserved_seating_url text,
   tickets_available boolean default true,
   sold_out_message text,
   details_url text,
@@ -44,6 +45,7 @@ create table if not exists public.shows (
 alter table public.shows add column if not exists end_time text;
 alter table public.shows add column if not exists advance_ticket_price text;
 alter table public.shows add column if not exists door_ticket_price text;
+alter table public.shows add column if not exists reserved_seating_url text;
 alter table public.shows add column if not exists tickets_available boolean default true;
 alter table public.shows add column if not exists sold_out_message text;
 alter table public.shows add column if not exists details_url text;
@@ -982,6 +984,7 @@ insert into public.shows (
   advance_ticket_price,
   door_ticket_price,
   ticket_url,
+  reserved_seating_url,
   tickets_available,
   sold_out_message,
   details_url,
@@ -1005,6 +1008,7 @@ insert into public.shows (
   '$8',
   '$10',
   'https://square.link/u/mzWHWprw',
+  null,
   true,
   null,
   null,
@@ -1032,6 +1036,7 @@ Advance tickets are just $8 online or $10 at the door, and concessions will be a
   '$8',
   '$10',
   'https://pinnaclestudiotn.com/event/6394941/748518295/cumberland-mountain-music-show',
+  'https://stageflow.cumberlandmountainmusic.com/available-seats',
   true,
   null,
   null,
@@ -1055,6 +1060,7 @@ Advance tickets are just $8 online or $10 at the door, and concessions will be a
   '$8',
   '$10',
   'https://pinnaclestudiotn.com/event/6394948/748518307/cumberland-mountain-music-show',
+  null,
   true,
   null,
   null,
@@ -1078,6 +1084,7 @@ Advance tickets are just $8 online or $10 at the door, and concessions will be a
   '$8',
   '$10',
   'https://pinnaclestudiotn.com/event/6394950/748518309/cumberland-mountain-music-christmas-show',
+  null,
   true,
   null,
   null,
@@ -1100,6 +1107,7 @@ on conflict (slug) do update set
   advance_ticket_price = excluded.advance_ticket_price,
   door_ticket_price = excluded.door_ticket_price,
   ticket_url = coalesce(public.shows.ticket_url, excluded.ticket_url),
+  reserved_seating_url = coalesce(public.shows.reserved_seating_url, excluded.reserved_seating_url),
   tickets_available = coalesce(public.shows.tickets_available, excluded.tickets_available),
   sold_out_message = coalesce(public.shows.sold_out_message, excluded.sold_out_message),
   details_url = excluded.details_url,

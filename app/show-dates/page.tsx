@@ -28,6 +28,7 @@ type DisplayShow = {
   venueLine: string;
   address?: string;
   ticketUrl?: string;
+  reservedSeatingUrl?: string;
   ticketsAvailable?: boolean;
   soldOutMessage?: string;
   detailsUrl?: string;
@@ -107,6 +108,7 @@ function fromDatabaseShow(show: DbShow): DisplayShow {
     venueLine: show.venue ?? venue.name,
     address: show.address ?? undefined,
     ticketUrl: show.ticket_url ?? undefined,
+    reservedSeatingUrl: show.reserved_seating_url ?? undefined,
     ticketsAvailable: isTicketsAvailable(show.tickets_available),
     soldOutMessage: show.sold_out_message ?? undefined,
     detailsUrl: show.details_url ?? (show.slug ? `/show-dates/${show.slug}` : undefined),
@@ -130,6 +132,7 @@ function fromFallbackShow(show: (typeof shows)[number]): DisplayShow {
     venueLine: `${venue.name}, ${venue.cityStateZip}`,
     address: `${venue.address}, ${venue.cityStateZip}`,
     ticketUrl: show.ticketUrl,
+    reservedSeatingUrl: undefined,
     ticketsAvailable: true,
     detailsUrl: show.detailsUrl,
     promoImage: show.promoImage,
@@ -232,6 +235,16 @@ export default async function ShowDatesPage() {
                     {getSoldOutMessage(featuredEvent.soldOutMessage)}
                   </span>
                 ) : null}
+                {featuredEvent.reservedSeatingUrl ? (
+                  <a
+                    href={featuredEvent.reservedSeatingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/65 px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+                  >
+                    Reserved Seating
+                  </a>
+                ) : null}
                 {featuredEvent.detailsUrl ? (
                   <Link
                     href={featuredEvent.detailsUrl}
@@ -241,6 +254,11 @@ export default async function ShowDatesPage() {
                   </Link>
                 ) : null}
               </div>
+              {featuredEvent.reservedSeatingUrl ? (
+                <p className="mt-3 text-center text-sm leading-6 text-[#bda987]">
+                  Reserved seating links are emailed after ticket purchase. Please allow up to 24 hours for delivery.
+                </p>
+              ) : null}
               {featuredEvent.ticketUrl &&
               isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
                 <TicketCheckoutNote ticketUrl={featuredEvent.ticketUrl} />
@@ -356,6 +374,16 @@ export default async function ShowDatesPage() {
                   {getSoldOutMessage(event.soldOutMessage)}
                 </span>
               ) : null}
+              {event.reservedSeatingUrl ? (
+                <a
+                  href={event.reservedSeatingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/65 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+                >
+                  Reserved Seating
+                </a>
+              ) : null}
               {event.detailsUrl ? (
                 <Link
                   href={event.detailsUrl}
@@ -365,6 +393,11 @@ export default async function ShowDatesPage() {
                 </Link>
               ) : null}
             </div>
+            {event.reservedSeatingUrl ? (
+              <p className="mt-3 text-center text-sm leading-6 text-[#bda987]">
+                Reserved seating links are emailed after ticket purchase. Please allow up to 24 hours for delivery.
+              </p>
+            ) : null}
             {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
               <TicketCheckoutNote ticketUrl={event.ticketUrl} />
             ) : null}

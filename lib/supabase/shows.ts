@@ -13,6 +13,7 @@ export type DbShow = {
   advance_ticket_price: string | null;
   door_ticket_price: string | null;
   ticket_url: string | null;
+  reserved_seating_url: string | null;
   tickets_available: boolean | null;
   sold_out_message: string | null;
   details_url: string | null;
@@ -28,20 +29,22 @@ export type DbShow = {
 };
 
 const selectFields =
-  "id,title,slug,show_date,doors_time,show_time,end_time,venue,address,advance_ticket_price,door_ticket_price,ticket_url,tickets_available,sold_out_message,details_url,promo_image_url,short_description,full_details,special_guests,featured_text,is_featured,published,created_at,updated_at";
+  "id,title,slug,show_date,doors_time,show_time,end_time,venue,address,advance_ticket_price,door_ticket_price,ticket_url,reserved_seating_url,tickets_available,sold_out_message,details_url,promo_image_url,short_description,full_details,special_guests,featured_text,is_featured,published,created_at,updated_at";
 const legacySelectFields =
   "id,title,slug,show_date,doors_time,show_time,end_time,venue,address,advance_ticket_price,door_ticket_price,ticket_url,details_url,promo_image_url,short_description,full_details,special_guests,featured_text,is_featured,published,created_at,updated_at";
 
-function isMissingTicketColumnError(error: { message?: string }) {
+function isMissingOptionalShowColumnError(error: { message?: string }) {
   return (
     error.message?.includes("tickets_available") ||
-    error.message?.includes("sold_out_message")
+    error.message?.includes("sold_out_message") ||
+    error.message?.includes("reserved_seating_url")
   );
 }
 
-function withTicketDefaults(show: DbShow) {
+function withShowDefaults(show: DbShow) {
   return {
     ...show,
+    reserved_seating_url: show.reserved_seating_url ?? null,
     tickets_available: show.tickets_available ?? null,
     sold_out_message: show.sold_out_message ?? null,
   } as DbShow;
@@ -59,7 +62,7 @@ export async function getPublishedShows() {
     .order("show_date", { ascending: true });
 
   if (error) {
-    if (isMissingTicketColumnError(error)) {
+    if (isMissingOptionalShowColumnError(error)) {
       const { data: legacyData, error: legacyError } = await supabase
         .from("shows")
         .select(legacySelectFields)
@@ -67,7 +70,7 @@ export async function getPublishedShows() {
         .order("show_date", { ascending: true });
 
       if (!legacyError) {
-        return ((legacyData ?? []) as DbShow[]).map(withTicketDefaults);
+        return ((legacyData ?? []) as DbShow[]).map(withShowDefaults);
       }
     }
 
@@ -75,7 +78,7 @@ export async function getPublishedShows() {
     return [];
   }
 
-  return ((data ?? []) as DbShow[]).map(withTicketDefaults);
+  return ((data ?? []) as DbShow[]).map(withShowDefaults);
 }
 
 export async function getNextPublishedShow() {
@@ -94,7 +97,7 @@ export async function getNextPublishedShow() {
     .maybeSingle();
 
   if (error) {
-    if (isMissingTicketColumnError(error)) {
+    if (isMissingOptionalShowColumnError(error)) {
       const { data: legacyData, error: legacyError } = await supabase
         .from("shows")
         .select(legacySelectFields)
@@ -105,7 +108,7 @@ export async function getNextPublishedShow() {
         .maybeSingle();
 
       if (!legacyError && legacyData) {
-        return withTicketDefaults(legacyData as DbShow);
+        return withShowDefaults(legacyData as DbShow);
       }
     }
 
@@ -113,7 +116,7 @@ export async function getNextPublishedShow() {
     return null;
   }
 
-  return data ? withTicketDefaults(data as DbShow) : null;
+  return data ? withShowDefaults(data as DbShow) : null;
 }
 
 export async function getPublishedShowBySlug(slug: string) {
@@ -129,7 +132,7 @@ export async function getPublishedShowBySlug(slug: string) {
     .maybeSingle();
 
   if (error) {
-    if (isMissingTicketColumnError(error)) {
+    if (isMissingOptionalShowColumnError(error)) {
       const { data: legacyData, error: legacyError } = await supabase
         .from("shows")
         .select(legacySelectFields)
@@ -138,7 +141,7 @@ export async function getPublishedShowBySlug(slug: string) {
         .maybeSingle();
 
       if (!legacyError && legacyData) {
-        return withTicketDefaults(legacyData as DbShow);
+        return withShowDefaults(legacyData as DbShow);
       }
     }
 
@@ -146,5 +149,5 @@ export async function getPublishedShowBySlug(slug: string) {
     return null;
   }
 
-  return data ? withTicketDefaults(data as DbShow) : null;
+  return data ? withShowDefaults(data as DbShow) : null;
 }
