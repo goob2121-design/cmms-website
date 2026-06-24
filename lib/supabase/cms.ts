@@ -35,6 +35,7 @@ export type MediaItem = {
   title: string;
   media_type: "photo" | "video";
   image_url: string | null;
+  thumbnail_url: string | null;
   video_url: string | null;
   caption: string | null;
   display_order: number | null;
