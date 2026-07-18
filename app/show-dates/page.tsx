@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
@@ -200,7 +201,7 @@ export default async function ShowDatesPage() {
             </div>
           ) : null}
 
-          <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+          <div className="grid items-start gap-8 p-6 sm:p-8 lg:grid-cols-[1.25fr_0.75fr]">
             <div>
               <h2 className="text-3xl font-semibold text-white sm:text-4xl">
                 {featuredEvent.date}
@@ -266,18 +267,25 @@ export default async function ShowDatesPage() {
             </div>
 
             <aside className="rounded-lg border border-[#d7a84f]/20 bg-black/25 p-6">
+              <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-lg border border-[#d7a84f]/20">
+                <Image
+                  src="/images/cumberland-gap-convention-center-night.webp"
+                  alt="Lincoln Memorial University Cumberland Gap Convention Center at dusk"
+                  fill
+                  sizes="(min-width: 1024px) 33vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
               <h3 className="text-xl font-semibold text-white">Venue</h3>
               <p className="mt-3 leading-7 text-[#d9c8aa]">
-                {featuredEvent.venueName}
-                {featuredEvent.address ? (
-                  <>
-                    <br />
-                    {featuredEvent.address}
-                  </>
-                ) : null}
+                Cumberland Gap Convention Center
+                <br />
+                601 Colwyn Ave
+                <br />
+                Cumberland Gap, TN 37724
               </p>
-              <p className="mt-5 text-[#d9c8aa]">
-                Concessions available during the show.
+              <p className="mt-5 text-sm leading-relaxed text-[#d9c8aa]">
+                The Cumberland Mountain Music Show is proudly hosted at the beautiful Cumberland Gap Convention Center in the heart of historic Cumberland Gap, Tennessee. This comfortable, modern venue offers an outstanding concert experience with reserved seating, convenient parking, and a welcoming atmosphere for music fans of all ages.
               </p>
             </aside>
           </div>
