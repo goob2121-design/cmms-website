@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
+import { isCalendarDateOnOrAfterToday } from "@/lib/countdown";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
@@ -147,10 +148,8 @@ export default async function ShowDatesPage() {
     databaseShows.length > 0
       ? databaseShows.map(fromDatabaseShow)
       : shows.map(fromFallbackShow);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const futureEvents = displayShows.filter(
-    (event) => new Date(event.dateValue) >= today,
+  const futureEvents = displayShows.filter((event) =>
+    isCalendarDateOnOrAfterToday(event.dateValue),
   );
   const featuredEvent = futureEvents[0];
   const featuredSponsors =

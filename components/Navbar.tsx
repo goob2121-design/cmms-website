@@ -8,6 +8,7 @@ import {
   Home,
   Images,
   Mail,
+  MapPin,
   Menu,
   Music,
   Newspaper,
@@ -55,6 +56,7 @@ export function Navbar({
     ...(showTeam
       ? [{ label: "Meet the Team", href: "/meet-the-team", Icon: Users }]
       : []),
+    { label: "Venue", href: "/venue", Icon: MapPin },
   ];
 
   useEffect(() => {

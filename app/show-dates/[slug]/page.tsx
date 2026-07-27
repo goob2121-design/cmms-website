@@ -173,6 +173,13 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
                       {show.address}
                     </>
                   ) : null}
+                  <br />
+                  <Link
+                    href="/venue"
+                    className="mt-2 inline-flex text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b] transition hover:text-white"
+                  >
+                    View Venue Information &amp; Directions
+                  </Link>
                 </dd>
               </div>
             )}

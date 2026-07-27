@@ -1,3 +1,4 @@
+import { getNewYorkDateValue } from "@/lib/countdown";
 import { supabase } from "./client";
 
 export type DbShow = {
@@ -86,7 +87,7 @@ export async function getNextPublishedShow() {
     return null;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getNewYorkDateValue();
   const { data, error } = await supabase
     .from("shows")
     .select(selectFields)

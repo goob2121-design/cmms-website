@@ -1,3 +1,5 @@
+import { isCalendarDateOnOrAfterToday } from "@/lib/countdown";
+
 export const venue = {
   name: "Cumberland Gap Convention Center",
   address: "601 Colwyn Avenue",
@@ -45,8 +47,5 @@ export const shows = [
 ];
 
 export function getNextShow() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return shows.find((show) => new Date(show.dateValue) >= today);
+  return shows.find((show) => isCalendarDateOnOrAfterToday(show.dateValue));
 }
