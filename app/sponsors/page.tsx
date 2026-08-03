@@ -30,12 +30,20 @@ export default async function SponsorsPage() {
           keep live bluegrass, gospel, and traditional mountain music thriving
           in Cumberland Gap.
         </p>
-        <Link
-          href="/become-a-sponsor"
-          className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-        >
-          Become a Sponsor
-        </Link>
+        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/become-a-sponsor"
+            className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+          >
+            Become a Sponsor
+          </Link>
+          <Link
+            href="/sponsor-rsvp"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/65 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+          >
+            Sponsor RSVP
+          </Link>
+        </div>
       </section>
 
       <section className="mt-10">
