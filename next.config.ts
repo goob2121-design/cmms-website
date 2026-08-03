@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/sponsor-rsvp",
+        destination: "https://stageflow.cumberlandmountainmusic.com/sponsor-rsvp",
+        permanent: true,
+      },
+      {
         source: "/:path*",
         has: [
           {
