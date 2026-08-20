@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
+import { MailingListForm } from "./mailing-list-form";
 import { createPublicPageMetadata } from "@/lib/metadata";
-
-const mailingListUrl = "https://pinnaclestudiotn.com/cmms-mailing-list";
 
 export const metadata: Metadata = createPublicPageMetadata({
   title: "Join the Mailing List | Cumberland Mountain Music",
@@ -25,20 +24,11 @@ export default function MailingListPage() {
           behind-the-scenes updates, and CMMS news delivered straight to you.
         </p>
 
-        <div className="mt-8">
-          <a
-            href={mailingListUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-7 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.34)] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-          >
-            Join the Mailing List
-          </a>
-        </div>
+        <MailingListForm />
 
         <p className="mt-5 text-sm leading-6 text-[#bda987]">
-          Mailing list signup is securely handled through our Pinnacle Recording
-          Studio page.
+          Occasional show announcements, ticket reminders, and CMMS news.
+          Unsubscribe anytime.
         </p>
       </section>
     </main>
