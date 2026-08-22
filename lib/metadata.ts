@@ -6,7 +6,7 @@ export const defaultTitle =
   "Cumberland Mountain Music | Home of The Cumberland Mountain Music Show";
 export const defaultDescription =
   "Live bluegrass, gospel, country, and traditional mountain music from Cumberland Gap, Tennessee.";
-export const defaultSocialImage = "/cmms-header.png";
+export const defaultSocialImage = "/cmms-og-image.png";
 
 type PublicPageMetadataOptions = {
   title: string;
