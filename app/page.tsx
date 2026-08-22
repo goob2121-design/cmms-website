@@ -281,13 +281,13 @@ export default async function Home() {
               <p className="mt-2 text-balance text-sm font-semibold uppercase tracking-[0.18em] text-[#f4d28b] drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)] sm:text-base sm:tracking-[0.22em]">
                 {homepageHeroText.genres}
               </p>
-              <div className="mt-7 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row">
+              <div className="mt-7 flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row sm:items-start">
                 {nextScheduleDate && !nextTicketsAvailable ? (
                   <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/45 bg-black/25 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
                     {getSoldOutMessage(nextScheduleDate.soldOutMessage)}
                   </span>
                 ) : nextTicketUrl ? (
-                  <TicketSaleGate show={{ slug: nextScheduleDate?.slug, name: nextScheduleDate?.title, date: nextScheduleDate?.dateValue ?? "" }} useSafeFailureFallback>
+                  <TicketSaleGate show={{ slug: nextScheduleDate?.slug, name: nextScheduleDate?.title, date: nextScheduleDate?.dateValue ?? "" }} useSafeFailureFallback presaleHref="/presale">
                     <a
                       href={nextTicketHref}
                       target="_blank"
@@ -307,7 +307,7 @@ export default async function Home() {
                 )}
                 <Link
                   href={nextScheduleDate?.detailsUrl ?? "/show-dates"}
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#f4d28b]/65 bg-black/20 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#fff7ea] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f4d28b] hover:text-[#f4d28b]"
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f] bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:border-[#f1c86e] hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
                 >
                   View Show Details
                 </Link>
@@ -369,7 +369,7 @@ export default async function Home() {
                     key={`${show.label}-${show.title ?? "cmms"}`}
                     className={`flex flex-col gap-2 rounded-md border px-4 py-3 transition sm:flex-row sm:items-center sm:justify-between ${
                       isNextShow
-                        ? "border-[#d7a84f]/60 bg-[#d7a84f]/12 text-white"
+                        ? "border-[#d7a84f]/60 bg-[#d7a84f]/12 text-[#120d07]"
                         : "border-[#d7a84f]/15 bg-black/20 text-[#e7d8c2]"
                     }`}
                   >
@@ -379,14 +379,6 @@ export default async function Home() {
                         <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">
                           Next Show
                         </span>
-                      ) : null}
-                      {show.detailsUrl ? (
-                        <Link
-                          href={show.detailsUrl}
-                          className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
-                        >
-                          View Details
-                        </Link>
                       ) : null}
                       {show.ticketUrl && isTicketsAvailable(show.ticketsAvailable) ? (
                         <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.dateValue }} useSafeFailureFallback={isNextShow} compact>
@@ -403,6 +395,14 @@ export default async function Home() {
                         <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
                           {getSoldOutMessage(show.soldOutMessage)}
                         </span>
+                      ) : null}
+                      {show.detailsUrl ? (
+                        <Link
+                          href={show.detailsUrl}
+                          className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
+                        >
+                          View Details
+                        </Link>
                       ) : null}
                     </div>
                     {(show.title || show.time || show.venue || priceLine) && (
@@ -423,7 +423,7 @@ export default async function Home() {
                 {getSoldOutMessage(nextScheduleDate.soldOutMessage)}
               </p>
             ) : nextTicketUrl ? (
-              <TicketSaleGate show={{ slug: nextScheduleDate?.slug, name: nextScheduleDate?.title, date: nextScheduleDate?.dateValue ?? "" }} useSafeFailureFallback className="mt-6">
+              <TicketSaleGate show={{ slug: nextScheduleDate?.slug, name: nextScheduleDate?.title, date: nextScheduleDate?.dateValue ?? "" }} useSafeFailureFallback hideWhenClosed className="mt-6">
                 <a
                   href={nextTicketUrl}
                   target="_blank"

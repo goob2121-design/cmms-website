@@ -223,7 +223,7 @@ export default async function ShowDatesPage() {
               <p className="mt-4 text-[#e7d8c2]">
                 {featuredEvent.priceLine}
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
                 {featuredEvent.ticketUrl &&
                 isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
                   <TicketSaleGate show={{ slug: featuredEvent.slug, name: featuredEvent.title, date: featuredEvent.dateValue }} useSafeFailureFallback>
@@ -372,7 +372,7 @@ export default async function ShowDatesPage() {
                 <dd className="mt-1">{event.priceLine}</dd>
               </div>
             </dl>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
               {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
                 <TicketSaleGate show={{ slug: event.slug, name: event.title, date: event.dateValue }}>
                   <a

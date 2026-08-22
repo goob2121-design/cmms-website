@@ -21,7 +21,7 @@ export type PublicTicketSalesResponse = {
 
 export type TicketSaleAvailability =
   | { kind: "public" }
-  | { kind: "presale"; publicSaleStartsAt: string | null }
+  | { kind: "presale"; presaleStartsAt: string | null; publicSaleStartsAt: string | null }
   | { kind: "not_on_sale"; publicSaleStartsAt: string | null }
   | { kind: "unavailable" }
   | { kind: "unmatched" };
@@ -32,7 +32,7 @@ export type WebsiteShowIdentity = {
   date: string;
 };
 
-type TicketSalesLookup =
+export type TicketSalesLookup =
   | { ok: true; data: PublicTicketSalesResponse }
   | { ok: false };
 
@@ -119,6 +119,7 @@ export function getTicketSaleAvailability(
   if (ticketSales.status === "presale") {
     return {
       kind: "presale",
+      presaleStartsAt: ticketSales.presaleStartsAt,
       publicSaleStartsAt: ticketSales.publicSaleStartsAt,
     };
   }
@@ -127,6 +128,19 @@ export function getTicketSaleAvailability(
     kind: "not_on_sale",
     publicSaleStartsAt: ticketSales.publicSaleStartsAt,
   };
+}
+
+export function getPresaleTimingText(
+  presaleStartsAt: string | null,
+  now = new Date(),
+) {
+  const startTime = presaleStartsAt ? Date.parse(presaleStartsAt) : Number.NaN;
+
+  if (!Number.isFinite(startTime) || now.getTime() >= startTime) {
+    return "Available now to CMMS mailing-list subscribers";
+  }
+
+  return `Starts ${formatPublicSaleStart(presaleStartsAt!)}`;
 }
 
 export function formatPublicSaleStart(value: string) {

@@ -17,6 +17,7 @@ const routes = [
   { path: "/in-memory", priority: 0.62 },
   { path: "/contact", priority: 0.7 },
   { path: "/mailing-list", priority: 0.65 },
+  { path: "/presale", priority: 0.8 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

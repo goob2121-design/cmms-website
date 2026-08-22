@@ -7,7 +7,7 @@ import {
   isValidEmailAddress,
   normalizeMailingListResult,
   trimMailingListValues,
-} from "../lib/mailing-list";
+} from "../lib/mailing-list.ts";
 
 const pageSource = readFileSync("app/mailing-list/page.tsx", "utf8");
 const formSource = readFileSync("app/mailing-list/mailing-list-form.tsx", "utf8");

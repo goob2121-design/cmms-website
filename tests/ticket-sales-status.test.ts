@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   formatPublicSaleStart,
+  getPresaleTimingText,
   getTicketSaleAvailability,
   TICKET_SALES_STATUS_ENDPOINT,
   TICKET_SALES_STATUS_REVALIDATE_SECONDS,
@@ -14,12 +15,16 @@ const websiteShow = {
   date: "2026-10-03",
 };
 
-function success(status: "public" | "presale" | "not_on_sale", publicSaleStartsAt: string | null) {
+function success(
+  status: "public" | "presale" | "not_on_sale",
+  publicSaleStartsAt: string | null,
+  presaleStartsAt: string | null = null,
+) {
   return {
     ok: true as const,
     data: {
       show: websiteShow,
-      ticketSales: { status, presaleStartsAt: null, publicSaleStartsAt },
+      ticketSales: { status, presaleStartsAt, publicSaleStartsAt },
     },
   };
 }
@@ -31,12 +36,34 @@ test("public status keeps the existing public ticket behavior", () => {
 test("presale hides purchasing and carries only public-sale timing", () => {
   assert.deepEqual(
     getTicketSaleAvailability(success("presale", "2026-08-27T20:00:00.000Z"), websiteShow),
-    { kind: "presale", publicSaleStartsAt: "2026-08-27T20:00:00.000Z" },
+    { kind: "presale", presaleStartsAt: null, publicSaleStartsAt: "2026-08-27T20:00:00.000Z" },
   );
   assert.deepEqual(getTicketSaleAvailability(success("presale", null), websiteShow), {
     kind: "presale",
+    presaleStartsAt: null,
     publicSaleStartsAt: null,
   });
+});
+
+test("presale timing is upcoming before its start and active afterward", () => {
+  const startsAt = "2026-09-01T04:00:00.000Z";
+
+  assert.equal(
+    getPresaleTimingText(startsAt, new Date("2026-08-31T20:00:00.000Z")),
+    "Starts September 1",
+  );
+  assert.doesNotMatch(
+    getPresaleTimingText(startsAt, new Date("2026-08-31T20:00:00.000Z")),
+    /Available now/,
+  );
+  assert.equal(
+    getPresaleTimingText(startsAt, new Date("2026-09-01T04:00:00.000Z")),
+    "Available now to CMMS mailing-list subscribers",
+  );
+  assert.equal(
+    getPresaleTimingText(null, new Date("2026-08-31T20:00:00.000Z")),
+    "Available now to CMMS mailing-list subscribers",
+  );
 });
 
 test("public-sale timestamps use a concise CMMS-friendly date", () => {
@@ -87,13 +114,26 @@ test("implementation has a 60-second server fetch and no private presale URL", (
   assert.equal(TICKET_SALES_STATUS_REVALIDATE_SECONDS, 60);
   assert.doesNotMatch(`${helper}\n${gate}`, /private.{0,20}(url|link)|presale.{0,20}(url|link)/i);
   assert.match(gate, /Early Access Presale/);
-  assert.match(gate, /Available now to CMMS mailing-list subscribers/);
+  assert.match(`${helper}\n${gate}`, /Available now to CMMS mailing-list subscribers/);
   assert.match(gate, /Join the Mailing List/);
   assert.match(gate, /href="\/mailing-list"/);
   assert.match(gate, /Tickets Coming Soon/);
-  assert.match(gate, /inline-flex min-h-12 max-w-full flex-col/);
+  assert.match(gate, /inline-flex min-h-12 items-center justify-center rounded-full/);
+  assert.match(gate, /getPresaleTimingText/);
   assert.doesNotMatch(gate, /max-w-xl|rounded-lg|px-5 py-4/);
   assert.match(gate, /Public sales open/);
+});
+
+test("homepage keeps one full presale promotion and a status-only schedule badge", () => {
+  const homepage = readFileSync("app/page.tsx", "utf8");
+  const gate = readFileSync("components/TicketSaleGate.tsx", "utf8");
+
+  assert.match(homepage, /useSafeFailureFallback presaleHref="\/presale">\s*<a/);
+  assert.match(homepage, /useSafeFailureFallback=\{isNextShow\} compact/);
+  assert.match(homepage, /useSafeFailureFallback hideWhenClosed className="mt-6"/);
+  assert.match(gate, /if \(compact\)[\s\S]*\{title\}[\s\S]*if \(resolvedAvailability.kind === "presale"\)/);
+  assert.match(gate, /max-w-full items-center rounded-full/);
+  assert.match(homepage, /flex flex-wrap items-center gap-3/);
 });
 
 test("existing public ticket URLs remain unchanged in source data", () => {
