@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TicketSaleGate } from "@/components/TicketSaleGate";
 import { notFound } from "next/navigation";
 import { MediaCard } from "@/components/MediaCard";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
+import { isCalendarDateOnOrAfterToday } from "@/lib/countdown";
 import { SponsorLevelBadge } from "@/lib/sponsorLevels";
 import { getPublishedMediaItemsForShow } from "@/lib/supabase/cms";
 import { getActiveSponsorsForShow } from "@/lib/supabase/sponsors";
@@ -225,14 +227,16 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             {show.ticket_url && ticketsAvailable ? (
-              <a
-                href={show.ticket_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-              >
-                Buy Advance Tickets
-              </a>
+              <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.show_date }} useSafeFailureFallback={isCalendarDateOnOrAfterToday(show.show_date)}>
+                <a
+                  href={show.ticket_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+                >
+                  Buy Advance Tickets
+                </a>
+              </TicketSaleGate>
             ) : !ticketsAvailable ? (
               <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/45 bg-black/25 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
                 {getSoldOutMessage(show.sold_out_message)}
@@ -261,7 +265,7 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
             </p>
           ) : null}
           {show.ticket_url && ticketsAvailable ? (
-            <TicketCheckoutNote ticketUrl={show.ticket_url} />
+            <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.show_date }} useSafeFailureFallback={isCalendarDateOnOrAfterToday(show.show_date)} hideWhenClosed><TicketCheckoutNote ticketUrl={show.ticket_url} /></TicketSaleGate>
           ) : null}
         </article>
       </section>

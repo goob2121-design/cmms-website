@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { TicketSaleGate } from "@/components/TicketSaleGate";
 import { PromoLightbox } from "@/components/PromoLightbox";
 import { TicketCheckoutNote } from "@/components/TicketCheckoutNote";
 import { isCalendarDateOnOrAfterToday } from "@/lib/countdown";
@@ -21,6 +22,7 @@ export const dynamic = "force-dynamic";
 
 type DisplayShow = {
   key: string;
+  slug?: string;
   date: string;
   dateValue: string;
   title: string;
@@ -98,6 +100,7 @@ function formatPriceLine(
 function fromDatabaseShow(show: DbShow): DisplayShow {
   return {
     key: show.id,
+    slug: show.slug,
     date: formatDate(show.show_date),
     dateValue: `${show.show_date}T00:00:00`,
     title: show.title,
@@ -125,6 +128,7 @@ function fromDatabaseShow(show: DbShow): DisplayShow {
 function fromFallbackShow(show: (typeof shows)[number]): DisplayShow {
   return {
     key: show.dateValue,
+    slug: show.detailsUrl?.split("/").pop(),
     date: show.date,
     dateValue: show.dateValue,
     title: show.title,
@@ -222,14 +226,16 @@ export default async function ShowDatesPage() {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 {featuredEvent.ticketUrl &&
                 isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
-                  <a
-                    href={featuredEvent.ticketUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-                  >
-                    Buy Advance Tickets
-                  </a>
+                  <TicketSaleGate show={{ slug: featuredEvent.slug, name: featuredEvent.title, date: featuredEvent.dateValue }} useSafeFailureFallback>
+                    <a
+                      href={featuredEvent.ticketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+                    >
+                      Buy Advance Tickets
+                    </a>
+                  </TicketSaleGate>
                 ) : !isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
                   <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d7a84f]/45 bg-black/25 px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
                     {getSoldOutMessage(featuredEvent.soldOutMessage)}
@@ -261,7 +267,7 @@ export default async function ShowDatesPage() {
               ) : null}
               {featuredEvent.ticketUrl &&
               isTicketsAvailable(featuredEvent.ticketsAvailable) ? (
-                <TicketCheckoutNote ticketUrl={featuredEvent.ticketUrl} />
+                <TicketSaleGate show={{ slug: featuredEvent.slug, name: featuredEvent.title, date: featuredEvent.dateValue }} useSafeFailureFallback hideWhenClosed><TicketCheckoutNote ticketUrl={featuredEvent.ticketUrl} /></TicketSaleGate>
               ) : null}
             </div>
 
@@ -368,14 +374,16 @@ export default async function ShowDatesPage() {
             </dl>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
-                <a
-                  href={event.ticketUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/65 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
-                >
-                  Buy Advance Tickets
-                </a>
+                <TicketSaleGate show={{ slug: event.slug, name: event.title, date: event.dateValue }}>
+                  <a
+                    href={event.ticketUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/65 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f8efe2] transition hover:border-[#f1c86e] hover:text-[#f4d28b]"
+                  >
+                    Buy Advance Tickets
+                  </a>
+                </TicketSaleGate>
               ) : !isTicketsAvailable(event.ticketsAvailable) ? (
                 <span className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7a84f]/35 bg-black/20 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#f4d28b]">
                   {getSoldOutMessage(event.soldOutMessage)}
@@ -406,7 +414,7 @@ export default async function ShowDatesPage() {
               </p>
             ) : null}
             {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
-              <TicketCheckoutNote ticketUrl={event.ticketUrl} />
+              <TicketSaleGate show={{ slug: event.slug, name: event.title, date: event.dateValue }} hideWhenClosed><TicketCheckoutNote ticketUrl={event.ticketUrl} /></TicketSaleGate>
             ) : null}
           </article>
         ))}

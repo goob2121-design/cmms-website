@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { TicketSaleGate } from "@/components/TicketSaleGate";
 import { HeroFogVideo } from "@/components/HeroFogVideo";
 import { Ticker } from "@/components/Ticker";
 import {
@@ -64,6 +65,8 @@ export const dynamic = "force-dynamic";
 type ScheduleItem = {
   label: string;
   date: Date;
+  dateValue: string;
+  slug?: string;
   title?: string;
   time?: string;
   venue?: string;
@@ -78,11 +81,14 @@ type ScheduleItem = {
 };
 
 const fallbackSchedule: ScheduleItem[] = [
-  { label: "February 7, 2026", date: new Date("2026-02-07T00:00:00") },
-  { label: "April 18, 2026", date: new Date("2026-04-18T00:00:00") },
+  { label: "February 7, 2026", date: new Date("2026-02-07T00:00:00"), dateValue: "2026-02-07" },
+  { label: "April 18, 2026", date: new Date("2026-04-18T00:00:00"), dateValue: "2026-04-18" },
   ...shows.map((show) => ({
     label: show.shortDate,
     date: new Date(show.dateValue),
+    dateValue: show.dateValue,
+    slug: show.detailsUrl?.split("/").pop(),
+    title: show.title,
     ticketUrl: show.ticketUrl,
     ticketsAvailable: true,
     detailsUrl: show.detailsUrl,
@@ -116,6 +122,8 @@ function fromDatabaseShow(show: DbShow): ScheduleItem {
   return {
     label: formatShowDate(show.show_date),
     date: new Date(`${show.show_date}T00:00:00`),
+    dateValue: show.show_date,
+    slug: show.slug,
     title: show.title,
     time: formatShowTime(show),
     venue: show.venue ?? undefined,
@@ -279,14 +287,16 @@ export default async function Home() {
                     {getSoldOutMessage(nextScheduleDate.soldOutMessage)}
                   </span>
                 ) : nextTicketUrl ? (
-                  <a
-                    href={nextTicketHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
-                  >
-                    Buy Advance Tickets
-                  </a>
+                  <TicketSaleGate show={{ slug: nextScheduleDate?.slug, name: nextScheduleDate?.title, date: nextScheduleDate?.dateValue ?? "" }} useSafeFailureFallback>
+                    <a
+                      href={nextTicketHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] shadow-[0_18px_40px_rgba(0,0,0,0.38)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f1c86e] focus:outline-none focus:ring-2 focus:ring-[#f4d28b] focus:ring-offset-2 focus:ring-offset-[#080604]"
+                    >
+                      Buy Advance Tickets
+                    </a>
+                  </TicketSaleGate>
                 ) : (
                   <Link
                     href={nextTicketHref}
@@ -379,14 +389,16 @@ export default async function Home() {
                         </Link>
                       ) : null}
                       {show.ticketUrl && isTicketsAvailable(show.ticketsAvailable) ? (
-                        <a
-                          href={show.ticketUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
-                        >
-                          Buy Advance Tickets
-                        </a>
+                        <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.dateValue }} useSafeFailureFallback={isNextShow} compact>
+                          <a
+                            href={show.ticketUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
+                          >
+                            Buy Advance Tickets
+                          </a>
+                        </TicketSaleGate>
                       ) : !isTicketsAvailable(show.ticketsAvailable) ? (
                         <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b]">
                           {getSoldOutMessage(show.soldOutMessage)}
@@ -411,14 +423,16 @@ export default async function Home() {
                 {getSoldOutMessage(nextScheduleDate.soldOutMessage)}
               </p>
             ) : nextTicketUrl ? (
-              <a
-                href={nextTicketUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
-              >
-                Buy Advance Tickets
-              </a>
+              <TicketSaleGate show={{ slug: nextScheduleDate?.slug, name: nextScheduleDate?.title, date: nextScheduleDate?.dateValue ?? "" }} useSafeFailureFallback className="mt-6">
+                <a
+                  href={nextTicketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+                >
+                  Buy Advance Tickets
+                </a>
+              </TicketSaleGate>
             ) : (
               <Link
                 href="/show-dates"
