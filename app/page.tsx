@@ -373,7 +373,7 @@ export default async function Home() {
                         : "border-[#d7a84f]/15 bg-black/20 text-[#e7d8c2]"
                     }`}
                   >
-                    <span className="font-semibold">{show.label}</span>
+                    <span className="font-semibold text-[#f8efe2]">{show.label}</span>
                     <div className="flex flex-wrap items-center gap-3">
                       {isNextShow ? (
                         <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#f4d28b]">
