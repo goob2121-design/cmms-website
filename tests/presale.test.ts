@@ -39,7 +39,14 @@ test("presale page state is date-aware and safely handles every API state", () =
   );
   assert.equal(getPresalePageState(lookup("presale", null)), "active");
   assert.equal(getPresalePageState(lookup("public", startsAt)), "public");
-  assert.equal(getPresalePageState(lookup("not_on_sale", startsAt)), "not_on_sale");
+  assert.equal(
+    getPresalePageState(
+      lookup("not_on_sale", startsAt),
+      new Date("2026-08-23T16:00:00Z"),
+    ),
+    "upcoming",
+  );
+  assert.equal(getPresalePageState(lookup("not_on_sale", null)), "not_on_sale");
   assert.equal(getPresalePageState({ ok: false }), "unavailable");
   assert.equal(
     getPresalePageState({ ok: true, data: { show: null, ticketSales: null } }),

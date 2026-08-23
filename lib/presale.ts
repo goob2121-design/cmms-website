@@ -21,11 +21,16 @@ export function getPresalePageState(
   if (!show || !ticketSales) return "no_show";
 
   if (ticketSales.status === "public") return "public";
-  if (ticketSales.status === "not_on_sale") return "not_on_sale";
 
   const presaleStart = ticketSales.presaleStartsAt
     ? Date.parse(ticketSales.presaleStartsAt)
     : Number.NaN;
+
+  if (ticketSales.status === "not_on_sale") {
+    return Number.isFinite(presaleStart) && now.getTime() < presaleStart
+      ? "upcoming"
+      : "not_on_sale";
+  }
 
   return Number.isFinite(presaleStart) && now.getTime() < presaleStart
     ? "upcoming"

@@ -5,6 +5,7 @@ import {
   formatPublicSaleStart,
   getPresaleTimingText,
   getTicketSaleAvailability,
+  shouldPromotePresale,
   TICKET_SALES_STATUS_ENDPOINT,
   TICKET_SALES_STATUS_REVALIDATE_SECONDS,
 } from "../lib/ticket-sales-status.ts";
@@ -76,7 +77,29 @@ test("public-sale timestamps use a concise CMMS-friendly date", () => {
 test("not-on-sale hides purchasing and preserves an optional opening time", () => {
   assert.deepEqual(getTicketSaleAvailability(success("not_on_sale", null), websiteShow), {
     kind: "not_on_sale",
+    presaleStartsAt: null,
     publicSaleStartsAt: null,
+  });
+});
+
+test("a future scheduled presale is promoted while a true not-on-sale state is not", () => {
+  const now = new Date("2026-08-23T16:00:00.000Z");
+  const scheduled = getTicketSaleAvailability(
+    success("not_on_sale", "2026-09-08T04:00:00.000Z", "2026-09-01T04:00:00.000Z"),
+    websiteShow,
+  );
+  const unscheduled = getTicketSaleAvailability(
+    success("not_on_sale", null, null),
+    websiteShow,
+  );
+
+  assert.equal(shouldPromotePresale(scheduled, now), true);
+  assert.equal(shouldPromotePresale(unscheduled, now), false);
+  assert.equal(shouldPromotePresale({ kind: "public" }, now), false);
+  assert.deepEqual(scheduled, {
+    kind: "not_on_sale",
+    presaleStartsAt: "2026-09-01T04:00:00.000Z",
+    publicSaleStartsAt: "2026-09-08T04:00:00.000Z",
   });
 });
 
@@ -131,7 +154,7 @@ test("homepage keeps one full presale promotion and a status-only schedule badge
   assert.match(homepage, /useSafeFailureFallback presaleHref="\/presale">\s*<a/);
   assert.match(homepage, /useSafeFailureFallback=\{isNextShow\} compact/);
   assert.match(homepage, /useSafeFailureFallback hideWhenClosed className="mt-6"/);
-  assert.match(gate, /if \(compact\)[\s\S]*\{title\}[\s\S]*if \(resolvedAvailability.kind === "presale"\)/);
+  assert.match(gate, /if \(compact\)[\s\S]*\{title\}[\s\S]*if \(showsPresalePromotion\)/);
   assert.match(gate, /max-w-full items-center rounded-full/);
   assert.match(homepage, /flex flex-wrap items-center gap-3/);
 });

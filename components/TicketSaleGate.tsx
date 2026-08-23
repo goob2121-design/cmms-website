@@ -5,6 +5,7 @@ import {
   getPresaleTimingText,
   getPublicTicketSalesStatus,
   getTicketSaleAvailability,
+  shouldPromotePresale,
   type TicketSaleAvailability,
   type WebsiteShowIdentity,
 } from "@/lib/ticket-sales-status";
@@ -44,20 +45,21 @@ export async function TicketSaleGate({
 
   if (hideWhenClosed) return null;
 
+  const showsPresalePromotion = shouldPromotePresale(resolvedAvailability);
   const publicSaleStart =
     "publicSaleStartsAt" in resolvedAvailability && resolvedAvailability.publicSaleStartsAt
       ? formatPublicSaleStart(resolvedAvailability.publicSaleStartsAt)
       : null;
 
   const title =
-    resolvedAvailability.kind === "presale"
+    showsPresalePromotion
       ? "Early Access Presale"
       : resolvedAvailability.kind === "not_on_sale"
         ? "Tickets Coming Soon"
         : "Ticket Availability Temporarily Unavailable";
 
   const secondaryText =
-    resolvedAvailability.kind === "presale"
+    showsPresalePromotion && "presaleStartsAt" in resolvedAvailability
       ? getPresaleTimingText(resolvedAvailability.presaleStartsAt)
       : resolvedAvailability.kind === "not_on_sale"
         ? publicSaleStart
@@ -76,7 +78,7 @@ export async function TicketSaleGate({
     );
   }
 
-  if (resolvedAvailability.kind === "presale" && presaleHref) {
+  if (showsPresalePromotion && presaleHref) {
     return (
       <Link
         href={presaleHref}
@@ -87,7 +89,7 @@ export async function TicketSaleGate({
     );
   }
 
-  if (resolvedAvailability.kind === "presale") {
+  if (showsPresalePromotion) {
     return (
       <span
         className={`inline-flex max-w-full flex-col items-center text-center ${className}`}

@@ -22,7 +22,7 @@ export type PublicTicketSalesResponse = {
 export type TicketSaleAvailability =
   | { kind: "public" }
   | { kind: "presale"; presaleStartsAt: string | null; publicSaleStartsAt: string | null }
-  | { kind: "not_on_sale"; publicSaleStartsAt: string | null }
+  | { kind: "not_on_sale"; presaleStartsAt: string | null; publicSaleStartsAt: string | null }
   | { kind: "unavailable" }
   | { kind: "unmatched" };
 
@@ -126,8 +126,22 @@ export function getTicketSaleAvailability(
 
   return {
     kind: "not_on_sale",
+    presaleStartsAt: ticketSales.presaleStartsAt,
     publicSaleStartsAt: ticketSales.publicSaleStartsAt,
   };
+}
+
+export function shouldPromotePresale(
+  availability: TicketSaleAvailability,
+  now = new Date(),
+) {
+  if (availability.kind === "presale") return true;
+  if (availability.kind !== "not_on_sale" || !availability.presaleStartsAt) {
+    return false;
+  }
+
+  const presaleStart = Date.parse(availability.presaleStartsAt);
+  return Number.isFinite(presaleStart) && presaleStart > now.getTime();
 }
 
 export function getPresaleTimingText(
