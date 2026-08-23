@@ -227,7 +227,7 @@ export default async function ShowDetailsPage({ params }: ShowDetailsPageProps) 
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
             {show.ticket_url && ticketsAvailable ? (
-              <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.show_date }} useSafeFailureFallback={isCalendarDateOnOrAfterToday(show.show_date)}>
+              <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.show_date }} useSafeFailureFallback={isCalendarDateOnOrAfterToday(show.show_date)} presaleHref="/presale">
                 <a
                   href={show.ticket_url}
                   target="_blank"
