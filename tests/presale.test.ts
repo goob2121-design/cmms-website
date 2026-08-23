@@ -113,7 +113,11 @@ test("page copy covers upcoming, active, public, not-on-sale, and failure states
   assert.match(page, /Buy Advance Tickets/);
   assert.match(page, /Already on the mailing list\?/);
   assert.match(page, /Watch your inbox for your Early Access ticket link/);
-  assert.match(page, /Spam, Promotions, or Social folders/);
+  assert.match(page, /Gmail may[\s\S]*Promotions tab/);
+  assert.match(page, /check Promotions,[\s\S]*Spam, or[\s\S]*Social/);
+  assert.match(page, /Gmail users:/);
+  assert.match(page, /instead of your Primary inbox/);
+  assert.match(page, /role="note"/);
   assert.match(page, /Not on the list yet\?/);
   assert.match(page, /we’ll send you the current Early Access ticket link while the presale is open/);
   assert.match(page, /activeDeliveryWindow/);

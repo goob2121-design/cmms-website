@@ -165,8 +165,9 @@ export default async function PresalePage() {
               Already on the mailing list?
             </h2>
             <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#d9c8aa]">
-              Watch your inbox for your Early Access ticket link. If you don’t
-              see it, check your Spam, Promotions, or Social folders.
+              Watch your inbox for your Early Access ticket link. Gmail may
+              place it in your Promotions tab, so check Promotions, Spam, or
+              Social if you don’t see it.
             </p>
           </aside>
         ) : null}
@@ -199,6 +200,12 @@ export default async function PresalePage() {
               ? "Join now so you’re on the list when Early Access opens."
               : "Join for future Early Access announcements, show news, and exclusive offers."}
         </p>
+        <aside className="mx-auto mt-5 max-w-2xl rounded-md border border-[#d7a84f]/30 bg-[#d7a84f]/8 px-4 py-3 text-sm leading-6 text-[#e7d8c2]" role="note">
+          <strong className="text-[#f4d28b]">Gmail users:</strong> Your CMMS
+          Early Access email may appear in your <strong>Promotions</strong> tab
+          instead of your Primary inbox. If you don’t see it, check Promotions,
+          Spam, or Social for an email from Cumberland Mountain Music Show.
+        </aside>
         <MailingListForm />
         <p className="mt-5 text-sm leading-6 text-[#bda987]">
           Occasional show announcements, ticket reminders, and CMMS news.

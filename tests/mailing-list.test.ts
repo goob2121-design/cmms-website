@@ -68,6 +68,9 @@ test("mailing list API statuses normalize new, existing, rejoin, and failure res
 
 test("mailing list form exposes success, already-subscribed, rejoin, failure, and duplicate-submit protections", () => {
   assert.match(formSource, /You're on the list!/);
+  assert.match(formSource, /Watch your inbox for CMMS updates and Early Access emails/);
+  assert.match(formSource, /Gmail, be sure to check your Promotions tab/);
+  assert.match(formSource, /check Spam or Social/);
   assert.match(formSource, /You're already on the list!/);
   assert.match(formSource, /Looks like you&apos;ve been on our mailing list before\./);
   assert.match(formSource, /Welcome back!/);
