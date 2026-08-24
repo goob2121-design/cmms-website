@@ -147,16 +147,59 @@ test("implementation has a 60-second server fetch and no private presale URL", (
   assert.match(gate, /Public sales open/);
 });
 
-test("homepage keeps one full presale promotion and a status-only schedule badge", () => {
+test("homepage schedule-row presale CTA uses the shared compact Presale link", () => {
   const homepage = readFileSync("app/page.tsx", "utf8");
   const gate = readFileSync("components/TicketSaleGate.tsx", "utf8");
 
   assert.match(homepage, /useSafeFailureFallback presaleHref="\/presale">\s*<a/);
-  assert.match(homepage, /useSafeFailureFallback=\{isNextShow\} compact/);
+  assert.match(
+    homepage,
+    /useSafeFailureFallback=\{isNextShow\} presaleHref="\/presale" compact/,
+  );
   assert.match(homepage, /useSafeFailureFallback hideWhenClosed className="mt-6"/);
-  assert.match(gate, /if \(compact\)[\s\S]*\{title\}[\s\S]*if \(showsPresalePromotion\)/);
+  assert.match(
+    gate,
+    /if \(compact\)[\s\S]*if \(showsPresalePromotion && presaleHref\)[\s\S]*<Link href=\{presaleHref\}/,
+  );
+  assert.match(gate, /const compactClassName = `inline-flex max-w-full items-center rounded-full/);
   assert.match(gate, /max-w-full items-center rounded-full/);
   assert.match(homepage, /flex flex-wrap items-center gap-3/);
+});
+
+test("scheduled and active presale schedule-row CTAs link to Presale without exposing private URLs", () => {
+  const homepage = readFileSync("app/page.tsx", "utf8");
+  const gate = readFileSync("components/TicketSaleGate.tsx", "utf8");
+
+  assert.equal(
+    shouldPromotePresale(
+      {
+        kind: "not_on_sale",
+        presaleStartsAt: "2026-09-01T04:00:00.000Z",
+        publicSaleStartsAt: "2026-09-08T04:00:00.000Z",
+      },
+      new Date("2026-08-24T12:00:00.000Z"),
+    ),
+    true,
+  );
+  assert.equal(
+    shouldPromotePresale({
+      kind: "presale",
+      presaleStartsAt: "2026-09-01T04:00:00.000Z",
+      publicSaleStartsAt: "2026-09-08T04:00:00.000Z",
+    }),
+    true,
+  );
+  assert.match(homepage, /presaleHref="\/presale" compact/);
+  assert.match(gate, /<Link href=\{presaleHref\} className=\{compactClassName\}>/);
+  assert.doesNotMatch(`${homepage}\n${gate}`, /private.{0,20}(url|href)|presale.{0,20}(ticketUrl|private)/i);
+});
+
+test("homepage schedule row keeps public ticket and View Details behavior", () => {
+  const homepage = readFileSync("app/page.tsx", "utf8");
+
+  assert.match(homepage, /href=\{show\.ticketUrl\}/);
+  assert.match(homepage, /Buy Advance Tickets/);
+  assert.match(homepage, /href=\{show\.detailsUrl\}[\s\S]*View Details/);
 });
 
 test("existing public ticket URLs remain unchanged in source data", () => {

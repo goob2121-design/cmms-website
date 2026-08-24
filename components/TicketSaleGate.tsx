@@ -68,9 +68,19 @@ export async function TicketSaleGate({
         : "Please check back shortly";
 
   if (compact) {
+    const compactClassName = `inline-flex max-w-full items-center rounded-full border border-[#d7a84f]/35 bg-black/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#f4d28b] ${className}`;
+
+    if (showsPresalePromotion && presaleHref) {
+      return (
+        <Link href={presaleHref} className={compactClassName}>
+          {title}
+        </Link>
+      );
+    }
+
     return (
       <span
-        className={`inline-flex max-w-full items-center rounded-full border border-[#d7a84f]/35 bg-black/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#f4d28b] ${className}`}
+        className={compactClassName}
         role="status"
       >
         {title}

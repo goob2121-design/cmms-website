@@ -381,7 +381,7 @@ export default async function Home() {
                         </span>
                       ) : null}
                       {show.ticketUrl && isTicketsAvailable(show.ticketsAvailable) ? (
-                        <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.dateValue }} useSafeFailureFallback={isNextShow} compact>
+                        <TicketSaleGate show={{ slug: show.slug, name: show.title, date: show.dateValue }} useSafeFailureFallback={isNextShow} presaleHref="/presale" compact>
                           <a
                             href={show.ticketUrl}
                             target="_blank"
