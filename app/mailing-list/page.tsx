@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GmailGuide } from "@/components/GmailGuide";
 import { MailingListForm } from "./mailing-list-form";
 import { createPublicPageMetadata } from "@/lib/metadata";
 
@@ -31,6 +32,8 @@ export default function MailingListPage() {
           Unsubscribe anytime.
         </p>
       </section>
+
+      <GmailGuide variant="mailingList" />
     </main>
   );
 }

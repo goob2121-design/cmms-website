@@ -91,7 +91,7 @@ export function MailingListForm() {
   }
 
   if (viewState === "subscribed") {
-    return <Confirmation title="You're on the list!" body="Watch your inbox for CMMS updates and Early Access emails. If you use Gmail, be sure to check your Promotions tab. You may also want to check Spam or Social if you don’t see our message." />;
+    return <Confirmation title="You're on the list!" body="Watch your inbox for CMMS updates and Early Access emails. If you use Gmail, be sure to check your Promotions tab. You may also want to check Spam or Social if you don’t see our message. Using Gmail? See the quick guide below if you don’t find your CMMS email in Primary." />;
   }
 
   if (viewState === "already_subscribed") {

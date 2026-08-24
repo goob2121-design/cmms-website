@@ -30,7 +30,10 @@ function lookup(
 test("presale page state is date-aware and safely handles every API state", () => {
   const startsAt = "2026-09-01T04:00:00.000Z";
   assert.equal(
-    getPresalePageState(lookup("presale", startsAt), new Date("2026-08-31T20:00:00Z")),
+    getPresalePageState(
+      lookup("presale", startsAt),
+      new Date("2026-08-31T20:00:00Z"),
+    ),
     "upcoming",
   );
   assert.equal(
@@ -78,30 +81,56 @@ test("strong delivery wording is limited to the active presale window", () => {
     false,
   );
   assert.equal(
-    isActivePresaleDeliveryWindow(lookup("public", "2026-09-01T04:00:00Z").data.ticketSales),
+    isActivePresaleDeliveryWindow(
+      lookup("public", "2026-09-01T04:00:00Z").data.ticketSales,
+    ),
     false,
   );
 });
 
 test("presale dates are friendly, dynamic New York dates", () => {
-  assert.equal(formatTicketSaleDate("2026-09-01T04:00:00.000Z"), "September 1, 2026");
+  assert.equal(
+    formatTicketSaleDate("2026-09-01T04:00:00.000Z"),
+    "September 1, 2026",
+  );
 });
 
-test("presale route reuses StageFlow and the existing mailing-list form", () => {
+test("presale route keeps StageFlow data and links to the mailing-list page", () => {
   const page = readFileSync("app/presale/page.tsx", "utf8");
-  const form = readFileSync("app/mailing-list/mailing-list-form.tsx", "utf8");
+  const mailingListPage = readFileSync("app/mailing-list/page.tsx", "utf8");
 
   assert.match(page, /getPublicTicketSalesStatus\(\)/);
+  assert.doesNotMatch(page, /\{stageFlowShow\.name\}/);
+  assert.match(page, /formatNewYorkShowDate\(stageFlowShow\.date\)/);
   assert.match(page, /ticketSales\.presaleStartsAt/);
   assert.match(page, /ticketSales\.publicSaleStartsAt/);
-  assert.match(page, /<MailingListForm \/>/);
-  assert.match(form, /MAILING_LIST_ENDPOINT/);
-  assert.doesNotMatch(page, /September 1, 2026|September 8, 2026|October 3, 2026/);
-  assert.doesNotMatch(page, /private.{0,20}(url|href)|presale.{0,20}(ticketUrl|href)/i);
+  assert.doesNotMatch(page, /View Show Details|detailsUrl/);
+  assert.doesNotMatch(page, /MailingListForm/);
+  assert.match(page, /href="\/mailing-list"/);
+  assert.match(page, /Join the Mailing List/);
+  assert.match(
+    page,
+    /Mailing List subscribers get Early Access before tickets go on sale[\s\S]*receive[\s\S]*an email with their private ticket link/,
+  );
+  assert.equal((page.match(/href="\/mailing-list"/g) ?? []).length, 1);
+  assert.doesNotMatch(page, /showGmailLink/);
+  assert.match(page, /href="#gmail-help"/);
+  assert.match(page, /private ticket link[\s\S]*href="#gmail-help"/);
+  assert.equal((page.match(/Using Gmail\?/g) ?? []).length, 1);
+  assert.match(page, /Using Gmail\? Check Promotions, Social, or Spam\./);
+  assert.match(mailingListPage, /<MailingListForm \/>/);
+  assert.doesNotMatch(
+    page,
+    /September 1, 2026|September 8, 2026|October 3, 2026/,
+  );
+  assert.doesNotMatch(
+    page,
+    /private.{0,20}(url|href)|presale.{0,20}(ticketUrl|href)/i,
+  );
   assert.match(page, /sm:grid-cols-3/);
 });
 
-test("page copy covers upcoming, active, public, not-on-sale, and failure states", () => {
+test("page copy keeps state-aware messaging and the Gmail guide", () => {
   const page = readFileSync("app/presale/page.tsx", "utf8");
 
   assert.match(page, /Early Access Opens Soon/);
@@ -111,16 +140,7 @@ test("page copy covers upcoming, active, public, not-on-sale, and failure states
   assert.match(page, /Presale information is temporarily unavailable/);
   assert.match(page, /pageState === "public"/);
   assert.match(page, /Buy Advance Tickets/);
-  assert.match(page, /Already on the mailing list\?/);
-  assert.match(page, /Watch your inbox for your Early Access ticket link/);
-  assert.match(page, /Gmail may[\s\S]*Promotions tab/);
-  assert.match(page, /check Promotions,[\s\S]*Spam, or[\s\S]*Social/);
-  assert.match(page, /Gmail users:/);
-  assert.match(page, /instead of your Primary inbox/);
-  assert.match(page, /role="note"/);
-  assert.match(page, /Not on the list yet\?/);
-  assert.match(page, /we’ll send you the current Early Access ticket link while the presale is open/);
-  assert.match(page, /activeDeliveryWindow/);
+  assert.match(page, /<GmailGuide variant="presale" \/>/);
 });
 
 test("homepage presale CTA links to the dedicated page without hero explanation", () => {
@@ -129,6 +149,9 @@ test("homepage presale CTA links to the dedicated page without hero explanation"
 
   assert.match(homepage, /presaleHref="\/presale"/);
   assert.match(gate, /href=\{presaleHref\}/);
-  assert.doesNotMatch(homepage.slice(0, homepage.indexOf("2026 CMMS Schedule")), /Join the Mailing List|Starts September|Available now to CMMS/);
+  assert.doesNotMatch(
+    homepage.slice(0, homepage.indexOf("2026 CMMS Schedule")),
+    /Join the Mailing List|Starts September|Available now to CMMS/,
+  );
   assert.match(homepage, /View Show Details/);
 });

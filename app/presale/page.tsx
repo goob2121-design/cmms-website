@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MailingListForm } from "@/app/mailing-list/mailing-list-form";
+import { GmailGuide } from "@/components/GmailGuide";
 import { formatNewYorkShowDate } from "@/lib/countdown";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import {
   formatTicketSaleDate,
   getPresalePageState,
-  isActivePresaleDeliveryWindow,
   type PresalePageState,
 } from "@/lib/presale";
 import { getNextPublishedShow } from "@/lib/supabase/shows";
@@ -49,11 +48,13 @@ const stateContent: Record<
   },
   no_show: {
     title: "Presale Details Coming Soon",
-    description: "There is no upcoming show to announce right now. Please check back soon.",
+    description:
+      "There is no upcoming show to announce right now. Please check back soon.",
   },
   unavailable: {
     title: "Presale Information Temporarily Unavailable",
-    description: "Presale information is temporarily unavailable. Please check back shortly.",
+    description:
+      "Presale information is temporarily unavailable. Please check back shortly.",
   },
 };
 
@@ -65,17 +66,14 @@ export default async function PresalePage() {
   const pageState = getPresalePageState(lookup);
   const stageFlowShow = lookup.ok ? lookup.data.show : null;
   const ticketSales = lookup.ok ? lookup.data.ticketSales : null;
-  const activeDeliveryWindow = isActivePresaleDeliveryWindow(ticketSales);
   const fallbackShow = stageFlowShow
-    ? shows.find(
-        (show) => show.dateValue.split("T")[0] === stageFlowShow.date,
-      )
+    ? shows.find((show) => show.dateValue.split("T")[0] === stageFlowShow.date)
     : undefined;
   const databaseShowMatches = Boolean(
     stageFlowShow &&
-      nextPublishedShow &&
-      (nextPublishedShow.slug === stageFlowShow.slug ||
-        nextPublishedShow.show_date === stageFlowShow.date),
+    nextPublishedShow &&
+    (nextPublishedShow.slug === stageFlowShow.slug ||
+      nextPublishedShow.show_date === stageFlowShow.date),
   );
   const publicTicketUrl =
     pageState === "public"
@@ -83,10 +81,6 @@ export default async function PresalePage() {
         ? nextPublishedShow?.ticket_url
         : fallbackShow?.ticketUrl
       : null;
-  const detailsUrl = databaseShowMatches
-    ? `/show-dates/${nextPublishedShow?.slug}`
-    : fallbackShow?.detailsUrl ??
-      (stageFlowShow?.slug ? `/show-dates/${stageFlowShow.slug}` : "/show-dates");
   const publicAvailability =
     nextPublishedShow && databaseShowMatches
       ? getTicketSaleAvailability(lookup, {
@@ -111,10 +105,16 @@ export default async function PresalePage() {
           Early Access Presale
         </h1>
         <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[#e7d8c2]">
-          CMMS Mailing List subscribers get early access to tickets before they
-          go on sale to the general public, giving you the first opportunity to
-          purchase tickets and choose from available reserved seats.
+          Mailing List subscribers get Early Access before tickets go on sale to
+          the general public. When Early Access begins, subscribers will receive
+          an email with their private ticket link.
         </p>
+        <a
+          href="#gmail-help"
+          className="mt-3 inline-block text-sm font-semibold text-[#d9c8aa] underline decoration-[#d7a84f]/55 underline-offset-4 transition hover:text-white"
+        >
+          Using Gmail? Check Promotions, Social, or Spam.
+        </a>
       </section>
 
       <section className="mx-auto mt-8 max-w-4xl rounded-lg border border-[#d7a84f]/25 bg-[linear-gradient(135deg,rgba(31,21,10,0.92),rgba(10,7,4,0.96))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.3)] sm:p-8">
@@ -128,48 +128,27 @@ export default async function PresalePage() {
         </div>
 
         {stageFlowShow && ticketSales ? (
-          <dl className="mt-7 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-md border border-[#d7a84f]/18 bg-black/25 p-4 text-center sm:col-span-3">
-              <dt className="text-xs font-bold uppercase tracking-[0.18em] text-[#d7a84f]">
-                Next Show
-              </dt>
-              <dd className="mt-2 text-lg font-semibold text-white">
-                {stageFlowShow.name}
-              </dd>
-              <dd className="mt-1 text-sm text-[#d9c8aa]">
-                {formatNewYorkShowDate(stageFlowShow.date)}
-              </dd>
-            </div>
-            <SaleDate
-              label="Early Access Begins"
-              value={ticketSales.presaleStartsAt}
-            />
-            <SaleDate
-              label="Public Ticket Sales Begin"
-              value={ticketSales.publicSaleStartsAt}
-            />
-            <div className="flex min-h-24 items-center justify-center rounded-md border border-[#d7a84f]/18 bg-black/25 p-4 text-center">
-              <Link
-                href={detailsUrl}
-                className="text-xs font-bold uppercase tracking-[0.16em] text-[#f4d28b] transition hover:text-white"
-              >
-                View Show Details
-              </Link>
-            </div>
-          </dl>
-        ) : null}
-
-        {activeDeliveryWindow ? (
-          <aside className="mt-6 rounded-md border border-[#d7a84f]/25 bg-black/25 px-5 py-4 text-center">
-            <h2 className="text-sm font-semibold text-white">
-              Already on the mailing list?
-            </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#d9c8aa]">
-              Watch your inbox for your Early Access ticket link. Gmail may
-              place it in your Promotions tab, so check Promotions, Spam, or
-              Social if you don’t see it.
-            </p>
-          </aside>
+          <>
+            <dl className="mt-7 grid border-y border-[#d7a84f]/20 sm:grid-cols-3">
+              <div className="border-b border-[#d7a84f]/20 px-4 py-5 text-center sm:border-b-0 sm:border-r">
+                <dt className="text-xs font-bold uppercase tracking-[0.18em] text-[#d7a84f]">
+                  Next Show
+                </dt>
+                <dd className="mt-2 font-semibold text-white">
+                  {formatNewYorkShowDate(stageFlowShow.date)}
+                </dd>
+              </div>
+              <SaleDate
+                label="Early Access Begins"
+                value={ticketSales.presaleStartsAt}
+              />
+              <SaleDate
+                label="Public Ticket Sales Begin"
+                value={ticketSales.publicSaleStartsAt}
+                isLast
+              />
+            </dl>
+          </>
         ) : null}
 
         {canShowPublicTicket ? (
@@ -184,41 +163,39 @@ export default async function PresalePage() {
             </a>
           </div>
         ) : null}
+
+        <div className="mt-6 border-t border-[#d7a84f]/20 pt-6 text-center">
+          <p className="mx-auto max-w-2xl leading-7 text-[#d9c8aa]">
+            Join the CMMS Mailing List now so you&apos;re ready when Early
+            Access opens.
+          </p>
+          <Link
+            href="/mailing-list"
+            className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+          >
+            Join the Mailing List
+          </Link>
+        </div>
       </section>
 
-      <section className="mx-auto mt-8 max-w-4xl rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.26)] sm:p-8 lg:p-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d7a84f]">
-          Stay Connected
-        </p>
-        <h2 className="mt-3 text-3xl font-semibold text-white">
-          Join the Mailing List
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl leading-7 text-[#d9c8aa]">
-          {activeDeliveryWindow
-            ? "Not on the list yet? Join below and we’ll send you the current Early Access ticket link while the presale is open."
-            : pageState === "upcoming"
-              ? "Join now so you’re on the list when Early Access opens."
-              : "Join for future Early Access announcements, show news, and exclusive offers."}
-        </p>
-        <aside className="mx-auto mt-5 max-w-2xl rounded-md border border-[#d7a84f]/30 bg-[#d7a84f]/8 px-4 py-3 text-sm leading-6 text-[#e7d8c2]" role="note">
-          <strong className="text-[#f4d28b]">Gmail users:</strong> Your CMMS
-          Early Access email may appear in your <strong>Promotions</strong> tab
-          instead of your Primary inbox. If you don’t see it, check Promotions,
-          Spam, or Social for an email from Cumberland Mountain Music Show.
-        </aside>
-        <MailingListForm />
-        <p className="mt-5 text-sm leading-6 text-[#bda987]">
-          Occasional show announcements, ticket reminders, and CMMS news.
-          Unsubscribe anytime.
-        </p>
-      </section>
+      <GmailGuide variant="presale" />
     </main>
   );
 }
 
-function SaleDate({ label, value }: { label: string; value: string | null }) {
+function SaleDate({
+  label,
+  value,
+  isLast = false,
+}: {
+  label: string;
+  value: string | null;
+  isLast?: boolean;
+}) {
   return (
-    <div className="rounded-md border border-[#d7a84f]/18 bg-black/25 p-4 text-center">
+    <div
+      className={`border-b border-[#d7a84f]/20 px-4 py-5 text-center sm:border-b-0 ${isLast ? "" : "sm:border-r"}`}
+    >
       <dt className="text-xs font-bold uppercase tracking-[0.18em] text-[#d7a84f]">
         {label}
       </dt>
