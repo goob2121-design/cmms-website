@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GmailGuide } from "@/components/GmailGuide";
+import { PresaleAccessGate } from "@/components/PresaleAccessGate";
 import { formatNewYorkShowDate } from "@/lib/countdown";
 import { createPublicPageMetadata } from "@/lib/metadata";
 import {
@@ -36,7 +37,7 @@ const stateContent: Record<
   active: {
     title: "Early Access Presale Is Open",
     description:
-      "Early Access is currently available to CMMS mailing-list subscribers. Subscribers receive ticket access through private CMMS email communications.",
+      "CMMS Mailing List members get early access to tickets and reserved seating before tickets go on sale to the general public.",
   },
   public: {
     title: "Public Ticket Sales Are Open",
@@ -75,8 +76,8 @@ export default async function PresalePage() {
     (nextPublishedShow.slug === stageFlowShow.slug ||
       nextPublishedShow.show_date === stageFlowShow.date),
   );
-  const publicTicketUrl =
-    pageState === "public"
+  const matchedTicketUrl =
+    pageState === "public" || pageState === "active"
       ? databaseShowMatches
         ? nextPublishedShow?.ticket_url
         : fallbackShow?.ticketUrl
@@ -91,7 +92,7 @@ export default async function PresalePage() {
       : null;
   const canShowPublicTicket =
     pageState === "public" &&
-    Boolean(publicTicketUrl) &&
+    Boolean(matchedTicketUrl) &&
     (publicAvailability === null || publicAvailability.kind === "public");
   const content = stateContent[pageState];
 
@@ -105,9 +106,8 @@ export default async function PresalePage() {
           Early Access Presale
         </h1>
         <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[#e7d8c2]">
-          Mailing List subscribers get Early Access before tickets go on sale to
-          the general public. When Early Access begins, subscribers will receive
-          an email with their private ticket link.
+          CMMS Mailing List members get early access to tickets and reserved
+          seating before tickets go on sale to the general public.
         </p>
         <a
           href="#gmail-help"
@@ -154,13 +154,37 @@ export default async function PresalePage() {
         {canShowPublicTicket ? (
           <div className="mt-6 text-center">
             <a
-              href={publicTicketUrl ?? undefined}
+              href={matchedTicketUrl ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
             >
               Buy Advance Tickets
             </a>
+          </div>
+        ) : null}
+
+        {pageState === "active" && stageFlowShow ? (
+          <div className="mx-auto mt-7 max-w-md">
+            <PresaleAccessGate
+              showSlug={stageFlowShow.slug}
+              publicSaleStartsAt={ticketSales?.publicSaleStartsAt ?? null}
+            >
+              {matchedTicketUrl ? (
+                <a
+                  href={matchedTicketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#d7a84f] px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.14em] text-[#120d07] transition hover:-translate-y-0.5 hover:bg-[#f1c86e]"
+                >
+                  Continue to Tickets
+                </a>
+              ) : null}
+            </PresaleAccessGate>
+            <p className="mt-4 text-center text-sm leading-6 text-[#bda987]">
+              Already received your presale email? You can also use the direct
+              ticket button in that email.
+            </p>
           </div>
         ) : null}
 

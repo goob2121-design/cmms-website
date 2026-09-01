@@ -166,7 +166,7 @@ test("homepage schedule-row presale CTA uses the shared compact Presale link", (
   assert.match(homepage, /flex flex-wrap items-center gap-3/);
 });
 
-test("scheduled and active presale schedule-row CTAs link to Presale without exposing private URLs", () => {
+test("scheduled and active presale CTAs route to the dedicated Presale page", () => {
   const homepage = readFileSync("app/page.tsx", "utf8");
   const gate = readFileSync("components/TicketSaleGate.tsx", "utf8");
 
@@ -191,6 +191,7 @@ test("scheduled and active presale schedule-row CTAs link to Presale without exp
   );
   assert.match(homepage, /presaleHref="\/presale" compact/);
   assert.match(gate, /<Link href=\{presaleHref\} className=\{compactClassName\}>/);
+  assert.doesNotMatch(gate, /<PresaleAccessGate/);
   assert.doesNotMatch(`${homepage}\n${gate}`, /private.{0,20}(url|href)|presale.{0,20}(ticketUrl|private)/i);
 });
 

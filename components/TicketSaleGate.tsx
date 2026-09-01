@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ClearPresaleAccessMarker } from "@/components/PresaleAccessGate";
 import {
   formatPublicSaleStart,
   getPresaleTimingText,
@@ -39,7 +40,16 @@ export async function TicketSaleGate({
         })
       : { kind: "unmatched" as const });
 
-  if (resolvedAvailability.kind === "public" || resolvedAvailability.kind === "unmatched") {
+  if (resolvedAvailability.kind === "public") {
+    return (
+      <>
+        {show?.slug ? <ClearPresaleAccessMarker showSlug={show.slug} /> : null}
+        {children}
+      </>
+    );
+  }
+
+  if (resolvedAvailability.kind === "unmatched") {
     return <>{children}</>;
   }
 

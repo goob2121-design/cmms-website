@@ -374,7 +374,7 @@ export default async function ShowDatesPage() {
             </dl>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
               {event.ticketUrl && isTicketsAvailable(event.ticketsAvailable) ? (
-                <TicketSaleGate show={{ slug: event.slug, name: event.title, date: event.dateValue }}>
+                <TicketSaleGate show={{ slug: event.slug, name: event.title, date: event.dateValue }} presaleHref="/presale">
                   <a
                     href={event.ticketUrl}
                     target="_blank"

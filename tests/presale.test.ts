@@ -110,12 +110,13 @@ test("presale route keeps StageFlow data and links to the mailing-list page", ()
   assert.match(page, /Join the Mailing List/);
   assert.match(
     page,
-    /Mailing List subscribers get Early Access before tickets go on sale[\s\S]*receive[\s\S]*an email with their private ticket link/,
+    /CMMS Mailing List members get early access to tickets and reserved[\s\S]*general public/,
   );
   assert.equal((page.match(/href="\/mailing-list"/g) ?? []).length, 1);
   assert.doesNotMatch(page, /showGmailLink/);
   assert.match(page, /href="#gmail-help"/);
-  assert.match(page, /private ticket link[\s\S]*href="#gmail-help"/);
+  assert.match(page, /<PresaleAccessGate/);
+  assert.match(page, /Already received your presale email\?/);
   assert.equal((page.match(/Using Gmail\?/g) ?? []).length, 1);
   assert.match(page, /Using Gmail\? Check Promotions, Social, or Spam\./);
   assert.match(mailingListPage, /<MailingListForm \/>/);
