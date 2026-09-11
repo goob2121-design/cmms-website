@@ -99,10 +99,7 @@ export default async function PresalePage() {
   return (
     <main className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-14 pt-40 sm:px-8 lg:pb-20">
       <section className="mx-auto max-w-4xl text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d7a84f]">
-          Cumberland Mountain Music
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+        <h1 className="text-4xl font-semibold leading-tight text-white sm:text-5xl">
           Early Access Presale
         </h1>
         <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[#e7d8c2]">

@@ -3,7 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { TicketSaleGate } from "@/components/TicketSaleGate";
 import { HeroFogVideo } from "@/components/HeroFogVideo";
+import { FeaturedYouTubeVideo } from "@/components/FeaturedYouTubeVideo";
 import { Ticker } from "@/components/Ticker";
+import {
+  CMMS_YOUTUBE_CHANNEL_URL,
+  FEATURED_YOUTUBE_VIDEO_ID,
+  CMMS_YOUTUBE_CHANNEL_ID,
+  YOUTUBE_FEED_REVALIDATE_SECONDS,
+} from "@/lib/featured-video";
 import {
   getActiveTickerMessages,
   getSitePage,
@@ -12,6 +19,10 @@ import {
 import { getHomepageSponsors, type PublicSponsor } from "@/lib/supabase/sponsors";
 import { getPublishedShows, type DbShow } from "@/lib/supabase/shows";
 import { getSoldOutMessage, isTicketsAvailable } from "@/lib/tickets";
+import {
+  fetchRecentYouTubeVideos,
+  selectDailyYouTubeVideo,
+} from "@/lib/youtube-feed";
 import { shows } from "./show-dates/showData";
 
 const homepageShareImage =
@@ -151,7 +162,7 @@ function HomepageSponsorStrip({ sponsors }: { sponsors: PublicSponsor[] }) {
   }
 
   return (
-    <section className="mt-10 w-full max-w-5xl border-t border-[#d7a84f]/20 pt-4">
+    <section className="mx-auto w-full max-w-5xl border-t border-[#d7a84f]/20 pt-4">
       <h2 className="text-center text-sm font-bold uppercase tracking-[0.22em] text-[#f4d28b]">
         Proudly Supported By
       </h2>
@@ -202,6 +213,7 @@ export default async function Home() {
     homepageHeroTaglineSetting,
     homepageHeroGenresSetting,
     homepageSponsors,
+    recentYouTubeVideos,
   ] = await Promise.all([
     getPublishedShows(),
     getActiveTickerMessages(),
@@ -210,6 +222,10 @@ export default async function Home() {
     getSiteSetting("homepage_hero_tagline"),
     getSiteSetting("homepage_hero_genres"),
     getHomepageSponsors(),
+    fetchRecentYouTubeVideos(
+      CMMS_YOUTUBE_CHANNEL_ID,
+      YOUTUBE_FEED_REVALIDATE_SECONDS,
+    ),
   ]);
   const schedule =
     databaseShows.length > 0
@@ -238,9 +254,14 @@ export default async function Home() {
       fallbackHomepageHeroText.genres,
   };
 
+  const featuredYouTubeVideo = selectDailyYouTubeVideo(
+    recentYouTubeVideos,
+    FEATURED_YOUTUBE_VIDEO_ID,
+  );
+
   return (
     <main className="relative z-10">
-      <section className="relative isolate min-h-[88svh] overflow-hidden">
+      <section className="relative isolate min-h-[88svh] overflow-hidden lg:min-h-[100svh]">
         <div
           aria-hidden="true"
           className="hero-background absolute inset-0 z-0 bg-cover bg-[100%_42%] brightness-[1.16]"
@@ -259,14 +280,24 @@ export default async function Home() {
           />
         </div>
 
-        <div className="relative z-[3] flex min-h-[88svh] flex-col pt-[124px] sm:pt-[104px]">
+        <div className="relative z-[3] flex min-h-[88svh] flex-col pt-[124px] sm:pt-[104px] lg:min-h-[100svh]">
           <Ticker
-            messages={tickerMessages.map((ticker) => ticker.message)}
+            messages={tickerMessages.map((ticker) =>
+              ticker.message.replace(
+                "Pre-Sale Tickets Are On Sale Now!",
+                "Advance Tickets Are On Sale Now!",
+              ),
+            )}
             speedSeconds={Number(tickerSpeedSetting?.setting_value ?? 30)}
           />
 
-          <div className="mx-auto flex w-full max-w-7xl flex-1 items-end justify-center px-5 pb-8 pt-8 sm:px-8 lg:pb-10">
-            <div className="mx-auto flex w-full max-w-4xl translate-y-8 flex-col items-center text-center sm:translate-y-10">
+          <div className="mx-auto flex w-full max-w-7xl flex-1 items-end px-5 pb-8 pt-8 sm:px-8 lg:items-center lg:pb-10">
+            <div className="w-full">
+            <FeaturedYouTubeVideo
+              video={featuredYouTubeVideo}
+              channelUrl={CMMS_YOUTUBE_CHANNEL_URL}
+            >
+              <div className="flex w-full flex-col items-center text-center">
               <Image
                 src="/cmms-logo.png"
                 alt="Cumberland Mountain Music Show"
@@ -312,14 +343,18 @@ export default async function Home() {
                   View Show Details
                 </Link>
               </div>
-              <HomepageSponsorStrip sponsors={homepageSponsors} />
+              </div>
+            </FeaturedYouTubeVideo>
+              <div className="mt-7">
+                <HomepageSponsorStrip sponsors={homepageSponsors} />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <section className="border-y border-[#d7a84f]/12 bg-[#080604] px-5 py-10 sm:px-8 lg:py-14">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+        <div className="mx-auto max-w-7xl space-y-8">
           <article className="rounded-lg border border-[#d7a84f]/20 bg-[#120d08]/85 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.26)] sm:p-7">
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#d7a84f]">
               {homepageAbout.title}
