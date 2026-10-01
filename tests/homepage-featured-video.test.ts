@@ -126,7 +126,10 @@ test("channel feed remains server-fetched hourly without an API key", () => {
     /CMMS_YOUTUBE_CHANNEL_ID = "UC2N6VWwTD7eooxtHxBTJ8GA"/,
   );
   assert.match(config, /YOUTUBE_FEED_REVALIDATE_SECONDS = 3600/);
-  assert.match(config, /FEATURED_YOUTUBE_VIDEO_ID/);
+  assert.match(
+    config,
+    /FEATURED_YOUTUBE_VIDEO_ID = "D-nUxAKw7Es"/,
+  );
   assert.match(homepage, /fetchRecentYouTubeVideos/);
   assert.match(homepage, /selectDailyYouTubeVideo/);
   assert.doesNotMatch(config, /API_KEY/);
